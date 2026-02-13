@@ -132,12 +132,52 @@ final class CallableInvokerTest extends TestCase
     }
 
     #[Test]
-    public function invokePassesContextToMetadata(): void
+    public function invokeBuildsIdentifierForClassScopedCallable(): void
     {
+        $capturedMetadata = null;
+        $decorator = $this->createCapturingDecorator($capturedMetadata);
+
+        $invoker = new CallableInvoker(
+            $decorator,
+            $this->createStub(ParameterValueResolverInterface::class),
+        );
+
+        $callable = new class {
+            public function __invoke(): void {}
+        };
+
+        $invoker->invoke($callable);
+
+        self::assertNotNull($capturedMetadata);
+        self::assertStringEndsWith('::__invoke', $capturedMetadata->identifier);
+    }
+
+    #[Test]
+    public function invokeBuildsIdentifierForPlainFunction(): void
+    {
+        $capturedMetadata = null;
+        $decorator = $this->createCapturingDecorator($capturedMetadata);
+
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('resolve')->willReturn('test');
+
+        $invoker = new CallableInvoker($decorator, $resolver);
+
+        $invoker->invoke(strlen(...));
+
+        self::assertNotNull($capturedMetadata);
+        self::assertSame('strlen', $capturedMetadata->identifier);
+    }
+
+    #[Test]
+    public function invokePassesOriginalClosureAndContextToDecorator(): void
+    {
+        $capturedClosure = null;
         $capturedMetadata = null;
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
-            function (\Closure $fn, Metadata $metadata) use (&$capturedMetadata) {
+            function (\Closure $fn, Metadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
+                $capturedClosure = $fn;
                 $capturedMetadata = $metadata;
 
                 return $fn;
@@ -149,17 +189,33 @@ final class CallableInvokerTest extends TestCase
             $this->createStub(ParameterValueResolverInterface::class),
         );
 
-        $invoker->invoke(fn () => null, ['key' => 'value']);
+        $invoker->invoke(fn () => 'original', ['key' => 'value']);
 
+        self::assertNotNull($capturedClosure);
+        self::assertSame('original', $capturedClosure());
         self::assertNotNull($capturedMetadata);
         self::assertSame(['key' => 'value'], $capturedMetadata->context);
-        self::assertNotEmpty($capturedMetadata->identifier);
+        self::assertInstanceOf(\ReflectionFunction::class, $capturedMetadata->function);
     }
 
     private function createPassthroughDecorator(): FunctionDecoratorInterface
     {
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
         $decorator->method('decorate')->willReturnArgument(0);
+
+        return $decorator;
+    }
+
+    private function createCapturingDecorator(?Metadata &$capturedMetadata): FunctionDecoratorInterface
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('decorate')->willReturnCallback(
+            function (\Closure $fn, Metadata $metadata) use (&$capturedMetadata) {
+                $capturedMetadata = $metadata;
+
+                return $fn;
+            },
+        );
 
         return $decorator;
     }
