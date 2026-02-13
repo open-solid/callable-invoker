@@ -88,7 +88,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
-        $this->expectExceptionMessage('Could not resolve value for parameter "name".');
+        $this->expectExceptionMessage('Could not resolve value for parameter "$name" in "test".');
         $chain->resolve($parameter, $this->createMetadata());
     }
 

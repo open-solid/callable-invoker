@@ -3,6 +3,7 @@
 namespace OpenSolid\CallableInvoker;
 
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 
 final readonly class CallableInvoker
@@ -28,6 +29,10 @@ final readonly class CallableInvoker
 
         $parameters = [];
         foreach ($function->getParameters() as $parameter) {
+            if ($parameter->isVariadic()) {
+                throw new VariadicParameterNotSupportedException($parameter->getName(), $identifier);
+            }
+
             $parameters[] = $this->valueResolver->resolve($parameter, $metadata);
         }
 

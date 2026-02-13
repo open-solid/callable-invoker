@@ -5,6 +5,7 @@ namespace OpenSolid\CallableInvoker\Tests;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
+use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Metadata;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -117,10 +118,24 @@ final class CallableInvokerTest extends TestCase
     }
 
     #[Test]
+    public function invokeThrowsWhenVariadicParameter(): void
+    {
+        $invoker = new CallableInvoker(
+            $this->createPassthroughDecorator(),
+            $this->createStub(ParameterValueResolverInterface::class),
+        );
+
+        $this->expectException(VariadicParameterNotSupportedException::class);
+        $this->expectExceptionMessage('Variadic parameter "$names" is not supported');
+
+        $invoker->invoke(fn (string ...$names) => implode(', ', $names));
+    }
+
+    #[Test]
     public function invokeThrowsWhenParameterCannotBeResolved(): void
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
-        $resolver->method('resolve')->willThrowException(new ParameterNotSupportedException('Cannot resolve.'));
+        $resolver->method('resolve')->willThrowException(new ParameterNotSupportedException('name', 'test'));
 
         $invoker = new CallableInvoker(
             $this->createPassthroughDecorator(),
