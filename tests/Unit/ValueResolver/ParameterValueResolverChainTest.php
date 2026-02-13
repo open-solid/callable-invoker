@@ -3,6 +3,7 @@
 namespace OpenSolid\CallableInvoker\Tests\Unit\ValueResolver;
 
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
+use OpenSolid\CallableInvoker\Exception\SkipParameterException;
 use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
@@ -90,6 +91,23 @@ final class ParameterValueResolverChainTest extends TestCase
         $this->expectException(ParameterNotSupportedException::class);
         $this->expectExceptionMessage('Could not resolve value for parameter "$name" in "test".');
         $chain->resolve($parameter, $this->createMetadata());
+    }
+
+    #[Test]
+    public function resolveSkipsResolverThatThrowsSkipParameterException(): void
+    {
+        $skipping = $this->createStub(ParameterValueResolverInterface::class);
+        $skipping->method('supports')->willReturn(true);
+        $skipping->method('resolve')->willThrowException(new SkipParameterException());
+
+        $fallback = $this->createStub(ParameterValueResolverInterface::class);
+        $fallback->method('supports')->willReturn(true);
+        $fallback->method('resolve')->willReturn('fallback');
+
+        $chain = new ParameterValueResolverChain([$skipping, $fallback]);
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertSame('fallback', $chain->resolve($parameter, $this->createMetadata()));
     }
 
     #[Test]

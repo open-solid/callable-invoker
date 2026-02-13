@@ -14,3 +14,8 @@ A callable invoker is a component whose job is to:
 ```console
 $ composer require open-solid/callable-invoker
 ```
+
+## TODO
+
+- [ ] Add more examples and documentation
+- [ ] Add support for grouping decorators and value resolvers (e.g. for controllers, commands, etc.)

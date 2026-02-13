@@ -3,6 +3,7 @@
 namespace OpenSolid\CallableInvoker\ValueResolver;
 
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
+use OpenSolid\CallableInvoker\Exception\SkipParameterException;
 use OpenSolid\CallableInvoker\FunctionMetadata;
 
 final readonly class ParameterValueResolverChain implements ParameterValueResolverInterface
@@ -30,7 +31,11 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
     {
         foreach ($this->resolvers as $resolver) {
             if ($resolver->supports($parameter, $metadata)) {
-                return $resolver->resolve($parameter, $metadata);
+                try {
+                    return $resolver->resolve($parameter, $metadata);
+                } catch (SkipParameterException) {
+                    continue;
+                }
             }
         }
 
