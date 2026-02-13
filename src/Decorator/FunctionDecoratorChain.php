@@ -2,7 +2,6 @@
 
 namespace OpenSolid\CallableInvoker\Decorator;
 
-use OpenSolid\CallableInvoker\Exception\FunctionNotSupportedException;
 use OpenSolid\CallableInvoker\Metadata;
 
 final readonly class FunctionDecoratorChain implements FunctionDecoratorInterface
@@ -15,13 +14,22 @@ final readonly class FunctionDecoratorChain implements FunctionDecoratorInterfac
     ) {
     }
 
+    public function supports(Metadata $metadata): bool
+    {
+        foreach ($this->decorators as $decorator) {
+            if ($decorator->supports($metadata)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function decorate(\Closure $function, Metadata $metadata): \Closure
     {
         foreach ($this->decorators as $decorator) {
-            try {
+            if ($decorator->supports($metadata)) {
                 $function = $decorator->decorate($function, $metadata);
-            } catch (FunctionNotSupportedException) {
-                // Try the next decorator
             }
         }
 

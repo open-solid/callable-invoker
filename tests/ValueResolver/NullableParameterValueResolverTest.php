@@ -2,7 +2,6 @@
 
 namespace OpenSolid\CallableInvoker\Tests\ValueResolver;
 
-use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Tests\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\NullableParameterValueResolver;
 use PHPUnit\Framework\Attributes\Test;
@@ -13,23 +12,29 @@ final class NullableParameterValueResolverTest extends TestCase
     use TestHelper;
 
     #[Test]
+    public function supportsNullableParameter(): void
+    {
+        $resolver = new NullableParameterValueResolver();
+        $parameter = $this->getParameter(fn (?string $name) => null, 'name');
+
+        self::assertTrue($resolver->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
+    public function doesNotSupportNonNullableParameter(): void
+    {
+        $resolver = new NullableParameterValueResolver();
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertFalse($resolver->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
     public function resolveNullableParameter(): void
     {
         $resolver = new NullableParameterValueResolver();
         $parameter = $this->getParameter(fn (?string $name) => null, 'name');
-        $metadata = $this->createMetadata();
 
-        self::assertNull($resolver->resolve($parameter, $metadata));
-    }
-
-    #[Test]
-    public function throwsWhenParameterNotNullable(): void
-    {
-        $resolver = new NullableParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $metadata = $this->createMetadata();
-
-        $this->expectException(ParameterNotSupportedException::class);
-        $resolver->resolve($parameter, $metadata);
+        self::assertNull($resolver->resolve($parameter, $this->createMetadata()));
     }
 }

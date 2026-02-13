@@ -7,6 +7,8 @@ use OpenSolid\CallableInvoker\Metadata;
 
 interface FunctionDecoratorInterface
 {
+    public function supports(Metadata $metadata): bool;
+
     /**
      * @throws FunctionNotSupportedException if the function cannot be decorated
      */

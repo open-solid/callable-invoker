@@ -7,6 +7,8 @@ use OpenSolid\CallableInvoker\Metadata;
 
 interface ParameterValueResolverInterface
 {
+    public function supports(\ReflectionParameter $parameter, Metadata $metadata): bool;
+
     /**
      * @throws ParameterNotSupportedException if the parameter cannot be resolved
      */

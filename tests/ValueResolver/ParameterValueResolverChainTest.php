@@ -14,47 +14,82 @@ final class ParameterValueResolverChainTest extends TestCase
     use TestHelper;
 
     #[Test]
-    public function resolveWithFirstResolver(): void
+    public function supportsWhenAnyResolverSupports(): void
+    {
+        $unsupported = $this->createStub(ParameterValueResolverInterface::class);
+        $unsupported->method('supports')->willReturn(false);
+
+        $supported = $this->createStub(ParameterValueResolverInterface::class);
+        $supported->method('supports')->willReturn(true);
+
+        $chain = new ParameterValueResolverChain([$unsupported, $supported]);
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertTrue($chain->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
+    public function doesNotSupportWhenNoResolverSupports(): void
+    {
+        $unsupported = $this->createStub(ParameterValueResolverInterface::class);
+        $unsupported->method('supports')->willReturn(false);
+
+        $chain = new ParameterValueResolverChain([$unsupported]);
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertFalse($chain->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
+    public function doesNotSupportWhenEmpty(): void
+    {
+        $chain = new ParameterValueResolverChain([]);
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertFalse($chain->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
+    public function resolveWithFirstSupportingResolver(): void
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturn('resolved');
 
         $chain = new ParameterValueResolverChain([$resolver]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $metadata = $this->createMetadata();
 
-        self::assertSame('resolved', $chain->resolve($parameter, $metadata));
+        self::assertSame('resolved', $chain->resolve($parameter, $this->createMetadata()));
     }
 
     #[Test]
     public function resolveSkipsUnsupportedResolvers(): void
     {
         $unsupported = $this->createStub(ParameterValueResolverInterface::class);
-        $unsupported->method('resolve')->willThrowException(new ParameterNotSupportedException());
+        $unsupported->method('supports')->willReturn(false);
 
         $supported = $this->createStub(ParameterValueResolverInterface::class);
+        $supported->method('supports')->willReturn(true);
         $supported->method('resolve')->willReturn('fallback');
 
         $chain = new ParameterValueResolverChain([$unsupported, $supported]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $metadata = $this->createMetadata();
 
-        self::assertSame('fallback', $chain->resolve($parameter, $metadata));
+        self::assertSame('fallback', $chain->resolve($parameter, $this->createMetadata()));
     }
 
     #[Test]
     public function throwsWhenNoResolverSupports(): void
     {
         $unsupported = $this->createStub(ParameterValueResolverInterface::class);
-        $unsupported->method('resolve')->willThrowException(new ParameterNotSupportedException());
+        $unsupported->method('supports')->willReturn(false);
 
         $chain = new ParameterValueResolverChain([$unsupported]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $metadata = $this->createMetadata();
 
         $this->expectException(ParameterNotSupportedException::class);
         $this->expectExceptionMessage('Could not resolve value for parameter "name".');
-        $chain->resolve($parameter, $metadata);
+        $chain->resolve($parameter, $this->createMetadata());
     }
 
     #[Test]
@@ -62,9 +97,8 @@ final class ParameterValueResolverChainTest extends TestCase
     {
         $chain = new ParameterValueResolverChain([]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $metadata = $this->createMetadata();
 
         $this->expectException(ParameterNotSupportedException::class);
-        $chain->resolve($parameter, $metadata);
+        $chain->resolve($parameter, $this->createMetadata());
     }
 }

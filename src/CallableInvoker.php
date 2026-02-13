@@ -23,7 +23,7 @@ final readonly class CallableInvoker
         $closure = $callable(...);
         $function = new \ReflectionFunction($closure);
         $scope = $function->getClosureScopeClass()?->getName();
-        $identifier = $scope !== null ? $scope.'::'.$function->getName() : $function->getName();
+        $identifier = null !== $scope ? $scope.'::'.$function->getName() : $function->getName();
         $metadata = new Metadata($function, $identifier, $context);
 
         $parameters = [];

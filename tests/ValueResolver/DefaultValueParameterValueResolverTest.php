@@ -2,7 +2,6 @@
 
 namespace OpenSolid\CallableInvoker\Tests\ValueResolver;
 
-use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Tests\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
 use PHPUnit\Framework\Attributes\Test;
@@ -13,13 +12,30 @@ final class DefaultValueParameterValueResolverTest extends TestCase
     use TestHelper;
 
     #[Test]
+    public function supportsParameterWithDefaultValue(): void
+    {
+        $resolver = new DefaultValueParameterValueResolver();
+        $parameter = $this->getParameter(fn (string $name = 'World') => null, 'name');
+
+        self::assertTrue($resolver->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
+    public function doesNotSupportParameterWithoutDefaultValue(): void
+    {
+        $resolver = new DefaultValueParameterValueResolver();
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertFalse($resolver->supports($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
     public function resolveDefaultValue(): void
     {
         $resolver = new DefaultValueParameterValueResolver();
         $parameter = $this->getParameter(fn (string $name = 'World') => null, 'name');
-        $metadata = $this->createMetadata();
 
-        self::assertSame('World', $resolver->resolve($parameter, $metadata));
+        self::assertSame('World', $resolver->resolve($parameter, $this->createMetadata()));
     }
 
     #[Test]
@@ -27,19 +43,7 @@ final class DefaultValueParameterValueResolverTest extends TestCase
     {
         $resolver = new DefaultValueParameterValueResolver();
         $parameter = $this->getParameter(fn (?string $name = null) => null, 'name');
-        $metadata = $this->createMetadata();
 
-        self::assertNull($resolver->resolve($parameter, $metadata));
-    }
-
-    #[Test]
-    public function throwsWhenNoDefaultValue(): void
-    {
-        $resolver = new DefaultValueParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $metadata = $this->createMetadata();
-
-        $this->expectException(ParameterNotSupportedException::class);
-        $resolver->resolve($parameter, $metadata);
+        self::assertNull($resolver->resolve($parameter, $this->createMetadata()));
     }
 }

@@ -15,13 +15,22 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
     ) {
     }
 
+    public function supports(\ReflectionParameter $parameter, Metadata $metadata): bool
+    {
+        foreach ($this->resolvers as $resolver) {
+            if ($resolver->supports($parameter, $metadata)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function resolve(\ReflectionParameter $parameter, Metadata $metadata): mixed
     {
         foreach ($this->resolvers as $resolver) {
-            try {
+            if ($resolver->supports($parameter, $metadata)) {
                 return $resolver->resolve($parameter, $metadata);
-            } catch (ParameterNotSupportedException) {
-                // Try the next resolver
             }
         }
 
