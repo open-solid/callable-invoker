@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer
+
+      - run: composer install --no-progress
+
+      - name: PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse
+
+  tests:
+    name: Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.4']
+        symfony: ['^7.4', '^8.0']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+
+      - name: Install dependencies
+        env:
+          SYMFONY_VERSION: ${{ matrix.symfony }}
+        run: |
+          composer require --no-update "symfony/framework-bundle:${SYMFONY_VERSION}"
+          composer install --no-progress
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit
