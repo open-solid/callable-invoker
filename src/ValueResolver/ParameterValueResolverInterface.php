@@ -12,7 +12,7 @@ interface ParameterValueResolverInterface
 
     /**
      * @throws ParameterNotSupportedException if the parameter cannot be resolved
-     * @throws SkipParameterException to signal the chain to try the next resolver
+     * @throws SkipParameterException         to signal the chain to try the next resolver
      */
     public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata): mixed;
 }
