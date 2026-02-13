@@ -63,9 +63,9 @@ final class CallableInvokerBundleTest extends TestCase
     {
         $invoker = $this->createContainer()->get(CallableInvokerInterface::class);
 
-        $result = $invoker->invoke(fn (?string $name) => $name ?? 'fallback');
+        $result = $invoker->invoke(fn (?string $name) => $name);
 
-        self::assertSame('fallback', $result);
+        self::assertNull($result);
     }
 
     #[Test]
