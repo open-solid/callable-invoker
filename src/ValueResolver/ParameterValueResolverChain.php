@@ -5,20 +5,18 @@ namespace OpenSolid\CallableInvoker\ValueResolver;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\SkipParameterException;
 use OpenSolid\CallableInvoker\FunctionMetadata;
+use Psr\Container\ContainerInterface;
 
 final readonly class ParameterValueResolverChain implements ParameterValueResolverInterface
 {
-    /**
-     * @param iterable<ParameterValueResolverInterface> $resolvers
-     */
     public function __construct(
-        private iterable $resolvers,
+        private ContainerInterface $container,
     ) {
     }
 
-    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata): bool
+    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): bool
     {
-        foreach ($this->resolvers as $resolver) {
+        foreach ($this->getResolvers($group) as $resolver) {
             if ($resolver->supports($parameter, $metadata)) {
                 return true;
             }
@@ -27,12 +25,12 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
         return false;
     }
 
-    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata): mixed
+    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): mixed
     {
-        foreach ($this->resolvers as $resolver) {
-            if ($resolver->supports($parameter, $metadata)) {
+        foreach ($this->getResolvers($group) as $resolver) {
+            if ($resolver->supports($parameter, $metadata, $group)) {
                 try {
-                    return $resolver->resolve($parameter, $metadata);
+                    return $resolver->resolve($parameter, $metadata, $group);
                 } catch (SkipParameterException) {
                     continue;
                 }
@@ -40,5 +38,14 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
         }
 
         throw new ParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+    }
+
+    /**
+     * @return iterable<ParameterValueResolverInterface>
+     */
+    private function getResolvers(?string $group): iterable
+    {
+        /* @phpstan-ignore-next-line */
+        return $this->container->get($group ?? '__NONE__');
     }
 }

@@ -8,11 +8,11 @@ use OpenSolid\CallableInvoker\FunctionMetadata;
 
 interface ParameterValueResolverInterface
 {
-    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata): bool;
+    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): bool;
 
     /**
      * @throws ParameterNotSupportedException if the parameter cannot be resolved
      * @throws SkipParameterException         to signal the chain to try the next resolver
      */
-    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata): mixed;
+    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): mixed;
 }

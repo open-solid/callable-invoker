@@ -27,7 +27,7 @@
         "phpunit/phpunit": "^13.0"
     },
     "scripts": {
-        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs": "php-cs-fixer fix",
         "stan": "phpstan analyse",
         "test": "phpunit",
         "qa": [

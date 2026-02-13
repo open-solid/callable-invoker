@@ -18,4 +18,4 @@ $ composer require open-solid/callable-invoker
 ## TODO
 
 - [ ] Add more examples and documentation
-- [ ] Add support for grouping decorators and value resolvers (e.g. for controllers, commands, etc.)
+- [ ] Add support for grouping decorators (e.g. for controllers, commands, etc.)

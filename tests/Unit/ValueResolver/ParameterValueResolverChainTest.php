@@ -9,6 +9,7 @@ use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 final class ParameterValueResolverChainTest extends TestCase
 {
@@ -23,7 +24,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $supported = $this->createStub(ParameterValueResolverInterface::class);
         $supported->method('supports')->willReturn(true);
 
-        $chain = new ParameterValueResolverChain([$unsupported, $supported]);
+        $chain = new ParameterValueResolverChain($this->createContainer([$unsupported, $supported]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         self::assertTrue($chain->supports($parameter, $this->createMetadata()));
@@ -35,7 +36,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $unsupported = $this->createStub(ParameterValueResolverInterface::class);
         $unsupported->method('supports')->willReturn(false);
 
-        $chain = new ParameterValueResolverChain([$unsupported]);
+        $chain = new ParameterValueResolverChain($this->createContainer([$unsupported]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         self::assertFalse($chain->supports($parameter, $this->createMetadata()));
@@ -44,7 +45,7 @@ final class ParameterValueResolverChainTest extends TestCase
     #[Test]
     public function doesNotSupportWhenEmpty(): void
     {
-        $chain = new ParameterValueResolverChain([]);
+        $chain = new ParameterValueResolverChain($this->createContainer([]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         self::assertFalse($chain->supports($parameter, $this->createMetadata()));
@@ -57,7 +58,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturn('resolved');
 
-        $chain = new ParameterValueResolverChain([$resolver]);
+        $chain = new ParameterValueResolverChain($this->createContainer([$resolver]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         self::assertSame('resolved', $chain->resolve($parameter, $this->createMetadata()));
@@ -73,7 +74,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $supported->method('supports')->willReturn(true);
         $supported->method('resolve')->willReturn('fallback');
 
-        $chain = new ParameterValueResolverChain([$unsupported, $supported]);
+        $chain = new ParameterValueResolverChain($this->createContainer([$unsupported, $supported]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         self::assertSame('fallback', $chain->resolve($parameter, $this->createMetadata()));
@@ -85,7 +86,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $unsupported = $this->createStub(ParameterValueResolverInterface::class);
         $unsupported->method('supports')->willReturn(false);
 
-        $chain = new ParameterValueResolverChain([$unsupported]);
+        $chain = new ParameterValueResolverChain($this->createContainer([$unsupported]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
@@ -104,7 +105,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $fallback->method('supports')->willReturn(true);
         $fallback->method('resolve')->willReturn('fallback');
 
-        $chain = new ParameterValueResolverChain([$skipping, $fallback]);
+        $chain = new ParameterValueResolverChain($this->createContainer([$skipping, $fallback]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         self::assertSame('fallback', $chain->resolve($parameter, $this->createMetadata()));
@@ -113,10 +114,21 @@ final class ParameterValueResolverChainTest extends TestCase
     #[Test]
     public function throwsWhenEmpty(): void
     {
-        $chain = new ParameterValueResolverChain([]);
+        $chain = new ParameterValueResolverChain($this->createContainer([]));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
         $chain->resolve($parameter, $this->createMetadata());
+    }
+
+    /**
+     * @param list<ParameterValueResolverInterface> $resolvers
+     */
+    private function createContainer(array $resolvers, string $group = '__NONE__'): ContainerInterface
+    {
+        $container = $this->createStub(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(fn (string $id) => $id === $group ? $resolvers : []);
+
+        return $container;
     }
 }

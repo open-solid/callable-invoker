@@ -186,12 +186,12 @@ final class LoggingDecorator implements FunctionDecoratorInterface
 
 final class GreetingValueResolver implements ParameterValueResolverInterface
 {
-    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata): bool
+    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): bool
     {
         return 'greeting' === $parameter->getName();
     }
 
-    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata): mixed
+    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): string
     {
         return 'Hey!';
     }
