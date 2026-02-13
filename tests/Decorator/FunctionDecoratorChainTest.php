@@ -5,12 +5,14 @@ namespace OpenSolid\CallableInvoker\Tests\Decorator;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\FunctionNotSupportedException;
-use OpenSolid\CallableInvoker\Metadata;
+use OpenSolid\CallableInvoker\Tests\TestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class FunctionDecoratorChainTest extends TestCase
 {
+    use TestHelper;
+
     #[Test]
     public function decorateWithNoDecorators(): void
     {
@@ -67,12 +69,5 @@ final class FunctionDecoratorChainTest extends TestCase
         $result = $chain->decorate($fn, $this->createMetadata());
 
         self::assertSame('original', $result());
-    }
-
-    private function createMetadata(): Metadata
-    {
-        $reflection = new \ReflectionFunction(fn () => null);
-
-        return new Metadata($reflection, 'test', []);
     }
 }

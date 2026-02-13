@@ -8,26 +8,30 @@ use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 final readonly class CallableInvoker
 {
     public function __construct(
-        private FunctionDecoratorInterface $functionDecorator,
-        private ParameterValueResolverInterface $parameterValueResolver,
+        private FunctionDecoratorInterface $decorator,
+        private ParameterValueResolverInterface $valueResolver,
     ) {
     }
 
     /**
      * @param array<string, mixed> $context
+     *
+     * @throws \ReflectionException
      */
     public function invoke(callable $callable, array $context = []): mixed
     {
         $closure = $callable(...);
         $function = new \ReflectionFunction($closure);
-        $identifier = $function->getClosureScopeClass()?->getName().'::'.$function->getName();
+        $scope = $function->getClosureScopeClass()?->getName();
+        $identifier = $scope !== null ? $scope.'::'.$function->getName() : $function->getName();
         $metadata = new Metadata($function, $identifier, $context);
+
         $parameters = [];
         foreach ($function->getParameters() as $parameter) {
-            $parameters[] = $this->parameterValueResolver->resolve($parameter, $metadata);
+            $parameters[] = $this->valueResolver->resolve($parameter, $metadata);
         }
 
-        $decorated = $this->functionDecorator->decorate($closure, $metadata);
+        $decorated = $this->decorator->decorate($closure, $metadata);
 
         return $decorated(...$parameters);
     }

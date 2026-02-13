@@ -3,20 +3,21 @@
 namespace OpenSolid\CallableInvoker\Tests\ValueResolver;
 
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
-use OpenSolid\CallableInvoker\Metadata;
+use OpenSolid\CallableInvoker\Tests\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\ContextParameterValueResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ContextParameterValueResolverTest extends TestCase
 {
+    use TestHelper;
+
     #[Test]
     public function resolveFromContext(): void
     {
         $resolver = new ContextParameterValueResolver();
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', ['name' => 'Alice']);
+        $metadata = $this->createMetadata(['name' => 'Alice']);
 
         self::assertSame('Alice', $resolver->resolve($parameter, $metadata));
     }
@@ -26,8 +27,7 @@ final class ContextParameterValueResolverTest extends TestCase
     {
         $resolver = new ContextParameterValueResolver();
         $parameter = $this->getParameter(fn (?string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', ['name' => null]);
+        $metadata = $this->createMetadata(['name' => null]);
 
         self::assertNull($resolver->resolve($parameter, $metadata));
     }
@@ -37,22 +37,9 @@ final class ContextParameterValueResolverTest extends TestCase
     {
         $resolver = new ContextParameterValueResolver();
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', []);
+        $metadata = $this->createMetadata();
 
         $this->expectException(ParameterNotSupportedException::class);
         $resolver->resolve($parameter, $metadata);
-    }
-
-    private function getParameter(\Closure $fn, string $name): \ReflectionParameter
-    {
-        $reflection = new \ReflectionFunction($fn);
-        foreach ($reflection->getParameters() as $parameter) {
-            if ($parameter->getName() === $name) {
-                return $parameter;
-            }
-        }
-
-        throw new \LogicException(\sprintf('Parameter "%s" not found.', $name));
     }
 }

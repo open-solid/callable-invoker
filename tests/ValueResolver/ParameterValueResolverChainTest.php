@@ -3,7 +3,7 @@
 namespace OpenSolid\CallableInvoker\Tests\ValueResolver;
 
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
-use OpenSolid\CallableInvoker\Metadata;
+use OpenSolid\CallableInvoker\Tests\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 
 final class ParameterValueResolverChainTest extends TestCase
 {
+    use TestHelper;
+
     #[Test]
     public function resolveWithFirstResolver(): void
     {
@@ -19,8 +21,7 @@ final class ParameterValueResolverChainTest extends TestCase
 
         $chain = new ParameterValueResolverChain([$resolver]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', []);
+        $metadata = $this->createMetadata();
 
         self::assertSame('resolved', $chain->resolve($parameter, $metadata));
     }
@@ -36,8 +37,7 @@ final class ParameterValueResolverChainTest extends TestCase
 
         $chain = new ParameterValueResolverChain([$unsupported, $supported]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', []);
+        $metadata = $this->createMetadata();
 
         self::assertSame('fallback', $chain->resolve($parameter, $metadata));
     }
@@ -50,8 +50,7 @@ final class ParameterValueResolverChainTest extends TestCase
 
         $chain = new ParameterValueResolverChain([$unsupported]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', []);
+        $metadata = $this->createMetadata();
 
         $this->expectException(ParameterNotSupportedException::class);
         $this->expectExceptionMessage('Could not resolve value for parameter "name".');
@@ -63,22 +62,9 @@ final class ParameterValueResolverChainTest extends TestCase
     {
         $chain = new ParameterValueResolverChain([]);
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
-        $reflection = new \ReflectionFunction(fn () => null);
-        $metadata = new Metadata($reflection, 'test', []);
+        $metadata = $this->createMetadata();
 
         $this->expectException(ParameterNotSupportedException::class);
         $chain->resolve($parameter, $metadata);
-    }
-
-    private function getParameter(\Closure $fn, string $name): \ReflectionParameter
-    {
-        $reflection = new \ReflectionFunction($fn);
-        foreach ($reflection->getParameters() as $parameter) {
-            if ($parameter->getName() === $name) {
-                return $parameter;
-            }
-        }
-
-        throw new \LogicException(\sprintf('Parameter "%s" not found.', $name));
     }
 }

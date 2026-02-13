@@ -4,6 +4,7 @@ namespace OpenSolid\CallableInvoker\Tests;
 
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Metadata;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -92,6 +93,67 @@ final class CallableInvokerTest extends TestCase
         $result = $invoker->invoke($callable);
 
         self::assertSame('invoked', $result);
+    }
+
+    #[Test]
+    public function invokeCallableWithMultipleParameters(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('resolve')->willReturnCallback(
+            fn (\ReflectionParameter $param) => match ($param->getName()) {
+                'greeting' => 'Hello',
+                'name' => 'World',
+            },
+        );
+
+        $invoker = new CallableInvoker(
+            $this->createPassthroughDecorator(),
+            $resolver,
+        );
+
+        $result = $invoker->invoke(fn (string $greeting, string $name) => "$greeting, $name!");
+
+        self::assertSame('Hello, World!', $result);
+    }
+
+    #[Test]
+    public function invokeThrowsWhenParameterCannotBeResolved(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('resolve')->willThrowException(new ParameterNotSupportedException('Cannot resolve.'));
+
+        $invoker = new CallableInvoker(
+            $this->createPassthroughDecorator(),
+            $resolver,
+        );
+
+        $this->expectException(ParameterNotSupportedException::class);
+        $invoker->invoke(fn (string $name) => $name);
+    }
+
+    #[Test]
+    public function invokePassesContextToMetadata(): void
+    {
+        $capturedMetadata = null;
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('decorate')->willReturnCallback(
+            function (\Closure $fn, Metadata $metadata) use (&$capturedMetadata) {
+                $capturedMetadata = $metadata;
+
+                return $fn;
+            },
+        );
+
+        $invoker = new CallableInvoker(
+            $decorator,
+            $this->createStub(ParameterValueResolverInterface::class),
+        );
+
+        $invoker->invoke(fn () => null, ['key' => 'value']);
+
+        self::assertNotNull($capturedMetadata);
+        self::assertSame(['key' => 'value'], $capturedMetadata->context);
+        self::assertNotEmpty($capturedMetadata->identifier);
     }
 
     private function createPassthroughDecorator(): FunctionDecoratorInterface
