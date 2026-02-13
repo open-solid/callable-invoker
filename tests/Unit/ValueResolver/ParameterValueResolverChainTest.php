@@ -121,6 +121,69 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain->resolve($parameter, $this->createMetadata());
     }
 
+    #[Test]
+    public function supportsUsesGroupResolvers(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+
+        $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertTrue($chain->supports($parameter, $this->createMetadata(), 'my_group'));
+    }
+
+    #[Test]
+    public function supportsReturnsFalseWhenGroupHasNoResolvers(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+
+        $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertFalse($chain->supports($parameter, $this->createMetadata(), 'other_group'));
+    }
+
+    #[Test]
+    public function resolveUsesGroupResolvers(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+        $resolver->method('resolve')->willReturn('from_group');
+
+        $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertSame('from_group', $chain->resolve($parameter, $this->createMetadata(), 'my_group'));
+    }
+
+    #[Test]
+    public function resolveThrowsWhenGroupHasNoMatchingResolver(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+
+        $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        $this->expectException(ParameterNotSupportedException::class);
+        $chain->resolve($parameter, $this->createMetadata(), 'other_group');
+    }
+
+    #[Test]
+    public function nullGroupFallsBackToNoneGroup(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+        $resolver->method('resolve')->willReturn('from_none');
+
+        $chain = new ParameterValueResolverChain($this->createContainer([$resolver]));
+        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+
+        self::assertSame('from_none', $chain->resolve($parameter, $this->createMetadata(), null));
+    }
+
     /**
      * @param list<ParameterValueResolverInterface> $resolvers
      */
