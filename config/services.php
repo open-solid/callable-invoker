@@ -37,7 +37,7 @@ return static function (ContainerConfigurator $container): void {
             service(ParameterValueResolverChain::class),
         ]);
 
-    $services->alias(CallableInvokerInterface::class, CallableInvoker::class);
-    $services->alias(FunctionDecoratorInterface::class, FunctionDecoratorChain::class);
-    $services->alias(ParameterValueResolverInterface::class, ParameterValueResolverChain::class);
+    $services->alias(CallableInvokerInterface::class, CallableInvoker::class)->public();
+    $services->alias(FunctionDecoratorInterface::class, FunctionDecoratorChain::class)->public();
+    $services->alias(ParameterValueResolverInterface::class, ParameterValueResolverChain::class)->public();
 };

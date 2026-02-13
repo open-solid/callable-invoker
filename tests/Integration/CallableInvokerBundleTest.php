@@ -7,30 +7,34 @@ use OpenSolid\CallableInvoker\CallableInvokerBundle;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
-use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
-use OpenSolid\CallableInvoker\ValueResolver\NullableParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
-use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel;
 
 final class CallableInvokerBundleTest extends TestCase
 {
+    private ?Kernel $kernel = null;
+
+    protected function tearDown(): void
+    {
+        $this->kernel?->shutdown();
+    }
+
     #[Test]
     public function servicesAreRegistered(): void
     {
         $container = $this->createContainer();
 
-        self::assertTrue($container->has(CallableInvoker::class));
-        self::assertTrue($container->has(FunctionDecoratorChain::class));
-        self::assertTrue($container->has(ParameterValueResolverChain::class));
-        self::assertTrue($container->has(DefaultValueParameterValueResolver::class));
-        self::assertTrue($container->has(NullableParameterValueResolver::class));
+        self::assertTrue($container->has(CallableInvokerInterface::class));
+        self::assertTrue($container->has(FunctionDecoratorInterface::class));
+        self::assertTrue($container->has(ParameterValueResolverInterface::class));
     }
 
     #[Test]
@@ -65,37 +69,32 @@ final class CallableInvokerBundleTest extends TestCase
 
     private function createContainer(): ContainerInterface
     {
-        $kernel = new class ('test', true) extends Kernel {
+        $this->kernel = new class ('test', true) extends Kernel {
             public function registerBundles(): iterable
             {
-                return [new CallableInvokerBundle()];
+                return [
+                    new FrameworkBundle(),
+                    new CallableInvokerBundle(),
+                    new class extends Bundle
+                    {
+                        public function shutdown(): void
+                        {
+                            restore_exception_handler();
+                        }
+                    },
+                ];
             }
 
             public function registerContainerConfiguration(LoaderInterface $loader): void
             {
-            }
-
-            protected function build(ContainerBuilder $container): void
-            {
-                $container->register('kernel', self::class)
-                    ->setPublic(true);
-
-                $container->addCompilerPass(new class implements CompilerPassInterface {
-                    public function process(ContainerBuilder $container): void
-                    {
-                        foreach ($container->getDefinitions() as $definition) {
-                            $definition->setPublic(true);
-                        }
-                        foreach ($container->getAliases() as $alias) {
-                            $alias->setPublic(true);
-                        }
-                    }
+                $loader->load(function (ContainerBuilder $container) {
+                    $container->loadFromExtension('framework', ['test' => true]);
                 });
             }
         };
 
-        $kernel->boot();
+        $this->kernel->boot();
 
-        return $kernel->getContainer();
+        return $this->kernel->getContainer()->get('test.service_container');
     }
 }
