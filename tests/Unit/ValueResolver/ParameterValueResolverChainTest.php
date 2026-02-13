@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenSolid\CallableInvoker\Tests\ValueResolver;
+namespace OpenSolid\CallableInvoker\Tests\Unit\ValueResolver;
 
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
-use OpenSolid\CallableInvoker\Tests\TestHelper;
+use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;

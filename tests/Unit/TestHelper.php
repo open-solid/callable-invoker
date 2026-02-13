@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenSolid\CallableInvoker\Tests;
+namespace OpenSolid\CallableInvoker\Tests\Unit;
 
 use OpenSolid\CallableInvoker\FunctionMetadata;
 

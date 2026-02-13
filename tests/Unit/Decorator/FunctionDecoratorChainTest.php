@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenSolid\CallableInvoker\Tests\Decorator;
+namespace OpenSolid\CallableInvoker\Tests\Unit\Decorator;
 
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
-use OpenSolid\CallableInvoker\Tests\TestHelper;
+use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

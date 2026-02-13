@@ -6,7 +6,7 @@ use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 
-final readonly class CallableInvoker
+final readonly class CallableInvoker implements CallableInvokerInterface
 {
     public function __construct(
         private FunctionDecoratorInterface $decorator,

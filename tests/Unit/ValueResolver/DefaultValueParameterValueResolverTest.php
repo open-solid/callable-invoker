@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenSolid\CallableInvoker\Tests\ValueResolver;
+namespace OpenSolid\CallableInvoker\Tests\Unit\ValueResolver;
 
-use OpenSolid\CallableInvoker\Tests\TestHelper;
+use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
