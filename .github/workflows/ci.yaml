@@ -26,9 +26,26 @@ jobs:
       - name: PHPStan
         run: vendor/bin/phpstan analyse
 
-  tests:
-    name: Tests
+  unit-tests:
+    name: Unit Tests
     needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer
+
+      - run: composer install --no-progress
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit --testsuite unit
+
+  integration-tests:
+    name: Integration Tests (Symfony ${{ matrix.symfony }})
+    needs: unit-tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -50,4 +67,4 @@ jobs:
           composer install --no-progress
 
       - name: PHPUnit
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --testsuite integration
