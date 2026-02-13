@@ -5,7 +5,6 @@ namespace OpenSolid\CallableInvoker\Tests\Unit;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
-use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\FunctionMetadata;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -115,20 +114,6 @@ final class CallableInvokerTest extends TestCase
         $result = $invoker->invoke(fn (string $greeting, string $name) => "$greeting, $name!");
 
         self::assertSame('Hello, World!', $result);
-    }
-
-    #[Test]
-    public function invokeThrowsWhenVariadicParameter(): void
-    {
-        $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $this->createStub(ParameterValueResolverInterface::class),
-        );
-
-        $this->expectException(VariadicParameterNotSupportedException::class);
-        $this->expectExceptionMessage('Variadic parameter "$names" is not supported');
-
-        $invoker->invoke(fn (string ...$names) => implode(', ', $names));
     }
 
     #[Test]

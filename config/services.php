@@ -5,6 +5,7 @@ use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
+use OpenSolid\CallableInvoker\ValueResolver\UnsupportedParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\NullableParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
@@ -22,6 +23,8 @@ return static function (ContainerConfigurator $container): void {
     $services->instanceof(ParameterValueResolverInterface::class)
         ->tag('callable_invoker.value_resolver');
 
+    $services->set(UnsupportedParameterValueResolver::class)
+        ->tag('callable_invoker.value_resolver', ['priority' => 100]);
     $services->set(DefaultValueParameterValueResolver::class)
         ->tag('callable_invoker.value_resolver', ['priority' => -100]);
     $services->set(NullableParameterValueResolver::class)

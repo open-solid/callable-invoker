@@ -5,6 +5,8 @@ namespace OpenSolid\CallableInvoker\Tests\Integration;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerBundle;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
+use OpenSolid\CallableInvoker\Exception\UntypedParameterNotSupportedException;
+use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\FunctionMetadata;
@@ -66,6 +68,26 @@ final class CallableInvokerBundleTest extends TestCase
         $result = $invoker->invoke(fn (?string $name) => $name);
 
         self::assertNull($result);
+    }
+
+    #[Test]
+    public function invokerRejectsUntypedParameter(): void
+    {
+        $invoker = $this->createContainer()->get(CallableInvokerInterface::class);
+
+        $this->expectException(UntypedParameterNotSupportedException::class);
+
+        $invoker->invoke(fn ($name) => $name);
+    }
+
+    #[Test]
+    public function invokerRejectsVariadicParameter(): void
+    {
+        $invoker = $this->createContainer()->get(CallableInvokerInterface::class);
+
+        $this->expectException(VariadicParameterNotSupportedException::class);
+
+        $invoker->invoke(fn (string ...$names) => implode(', ', $names));
     }
 
     #[Test]
