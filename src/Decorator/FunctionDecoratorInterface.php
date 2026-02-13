@@ -3,14 +3,14 @@
 namespace OpenSolid\CallableInvoker\Decorator;
 
 use OpenSolid\CallableInvoker\Exception\FunctionNotSupportedException;
-use OpenSolid\CallableInvoker\Metadata;
+use OpenSolid\CallableInvoker\FunctionMetadata;
 
 interface FunctionDecoratorInterface
 {
-    public function supports(Metadata $metadata): bool;
+    public function supports(FunctionMetadata $metadata): bool;
 
     /**
      * @throws FunctionNotSupportedException if the function cannot be decorated
      */
-    public function decorate(\Closure $function, Metadata $metadata): \Closure;
+    public function decorate(\Closure $function, FunctionMetadata $metadata): \Closure;
 }

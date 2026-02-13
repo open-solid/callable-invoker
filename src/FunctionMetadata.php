@@ -2,7 +2,7 @@
 
 namespace OpenSolid\CallableInvoker;
 
-final readonly class Metadata
+final readonly class FunctionMetadata
 {
     /**
      * @param array<string, mixed> $context
