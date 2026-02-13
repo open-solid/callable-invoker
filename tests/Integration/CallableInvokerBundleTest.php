@@ -149,7 +149,7 @@ final class CallableInvokerBundleTest extends TestCase
     }
 }
 
-class LoggingDecorator implements FunctionDecoratorInterface
+final class LoggingDecorator implements FunctionDecoratorInterface
 {
     public function supports(FunctionMetadata $metadata): bool
     {
@@ -162,7 +162,7 @@ class LoggingDecorator implements FunctionDecoratorInterface
     }
 }
 
-class GreetingValueResolver implements ParameterValueResolverInterface
+final class GreetingValueResolver implements ParameterValueResolverInterface
 {
     public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata): bool
     {

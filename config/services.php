@@ -22,8 +22,10 @@ return static function (ContainerConfigurator $container): void {
     $services->instanceof(ParameterValueResolverInterface::class)
         ->tag('callable_invoker.value_resolver');
 
-    $services->set(DefaultValueParameterValueResolver::class);
-    $services->set(NullableParameterValueResolver::class);
+    $services->set(DefaultValueParameterValueResolver::class)
+        ->tag('callable_invoker.value_resolver', ['priority' => -100]);
+    $services->set(NullableParameterValueResolver::class)
+        ->tag('callable_invoker.value_resolver', ['priority' => -200]);
 
     $services->set(FunctionDecoratorChain::class)
         ->args([tagged_iterator('callable_invoker.decorator')]);
