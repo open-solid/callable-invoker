@@ -2,6 +2,7 @@
 
 namespace OpenSolid\CallableInvoker\ValueResolver;
 
+use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\UntypedParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\FunctionMetadata;
@@ -19,6 +20,10 @@ final readonly class UnsupportedParameterValueResolver implements ParameterValue
             throw new VariadicParameterNotSupportedException($parameter->getName(), $metadata->identifier);
         }
 
-        throw new UntypedParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+        if (!$parameter->hasType()) {
+            throw new UntypedParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+        }
+
+        throw new ParameterNotSupportedException($parameter->getName(), $metadata->identifier);
     }
 }
