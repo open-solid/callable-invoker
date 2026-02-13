@@ -25,5 +25,15 @@
         "friendsofphp/php-cs-fixer": "^3.94",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^13.0"
+    },
+    "scripts": {
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "stan": "phpstan analyse",
+        "test": "phpunit",
+        "qa": [
+            "@cs",
+            "@stan",
+            "@test"
+        ]
     }
 }
