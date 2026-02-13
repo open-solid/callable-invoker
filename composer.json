@@ -20,5 +20,9 @@
         "psr-4": {
             "OpenSolid\\CallableInvoker\\Tests\\": "tests/"
         }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.94",
+        "phpstan/phpstan": "^2.1"
     }
 }

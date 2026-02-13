@@ -25,6 +25,6 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
             }
         }
 
-        throw new ParameterNotSupportedException(sprintf('Could not resolve value for parameter "%s".', $parameter->getName()));
+        throw new ParameterNotSupportedException(\sprintf('Could not resolve value for parameter "%s".', $parameter->getName()));
     }
 }

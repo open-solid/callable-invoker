@@ -9,7 +9,7 @@ final readonly class ContextParameterValueResolver implements ParameterValueReso
 {
     public function resolve(\ReflectionParameter $parameter, Metadata $metadata): mixed
     {
-        if (!array_key_exists($parameter->getName(), $metadata->context)) {
+        if (!\array_key_exists($parameter->getName(), $metadata->context)) {
             throw new ParameterNotSupportedException();
         }
 
