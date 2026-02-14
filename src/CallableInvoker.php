@@ -31,7 +31,7 @@ final readonly class CallableInvoker implements CallableInvokerInterface
             $parameters[] = $this->valueResolver->resolve($parameter, $metadata, $group);
         }
 
-        $decorated = $this->decorator->decorate($closure, $metadata);
+        $decorated = $this->decorator->decorate($closure, $metadata, $group);
 
         return $decorated(...$parameters);
     }

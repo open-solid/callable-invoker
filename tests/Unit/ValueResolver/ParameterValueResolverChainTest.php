@@ -190,6 +190,7 @@ final class ParameterValueResolverChainTest extends TestCase
     private function createContainer(array $resolvers, string $group = '__NONE__'): ContainerInterface
     {
         $container = $this->createStub(ContainerInterface::class);
+        $container->method('has')->willReturnCallback(fn (string $id) => $id === $group);
         $container->method('get')->willReturnCallback(fn (string $id) => $id === $group ? $resolvers : []);
 
         return $container;

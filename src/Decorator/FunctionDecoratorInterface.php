@@ -7,10 +7,10 @@ use OpenSolid\CallableInvoker\FunctionMetadata;
 
 interface FunctionDecoratorInterface
 {
-    public function supports(FunctionMetadata $metadata): bool;
+    public function supports(FunctionMetadata $metadata, ?string $group = null): bool;
 
     /**
      * @throws FunctionNotSupportedException if the function cannot be decorated
      */
-    public function decorate(\Closure $function, FunctionMetadata $metadata): \Closure;
+    public function decorate(\Closure $function, FunctionMetadata $metadata, ?string $group = null): \Closure;
 }

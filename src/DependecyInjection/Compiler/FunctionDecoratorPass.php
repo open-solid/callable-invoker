@@ -7,41 +7,38 @@ namespace OpenSolid\CallableInvoker\DependecyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-final readonly class ParameterValueResolverPass implements CompilerPassInterface
+final readonly class FunctionDecoratorPass implements CompilerPassInterface
 {
-    use PriorityTaggedServiceTrait;
-
     public function process(ContainerBuilder $container): void
     {
-        $definition = $container->getDefinition('callable_invoker.value_resolver_chain');
+        $definition = $container->getDefinition('callable_invoker.decorator_chain');
 
-        $valueResolvers = [];
+        $decorators = [];
         /** @var list<array<string, list<string>>> $tags */
-        foreach ($container->findTaggedServiceIds('callable_invoker.value_resolver') as $id => $tags) {
-            if ('callable_invoker.value_resolver_chain' === $id) {
+        foreach ($container->findTaggedServiceIds('callable_invoker.decorator') as $id => $tags) {
+            if ('callable_invoker.decorator_chain' === $id) {
                 continue;
             }
 
             $hasExplicitGroup = false;
             foreach ($tags as $tag) {
                 foreach ($tag['groups'] ?? [] as $group) {
-                    $valueResolvers[$group][$id] = new Reference($id);
+                    $decorators[$group][$id] = new Reference($id);
                     $hasExplicitGroup = true;
                 }
             }
             if (!$hasExplicitGroup) {
-                $valueResolvers['__NONE__'][$id] = new Reference($id);
+                $decorators['__NONE__'][$id] = new Reference($id);
             }
         }
 
-        foreach ($valueResolvers as $group => $resolvers) {
-            $valueResolvers[$group] = new IteratorArgument(array_values($resolvers));
+        foreach ($decorators as $group => $refs) {
+            $decorators[$group] = new IteratorArgument(array_values($refs));
         }
 
-        $definition->setArgument(0, new ServiceLocatorArgument($valueResolvers));
+        $definition->setArgument(0, new ServiceLocatorArgument($decorators));
     }
 }

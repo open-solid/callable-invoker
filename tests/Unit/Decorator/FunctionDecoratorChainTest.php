@@ -7,6 +7,7 @@ use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 final class FunctionDecoratorChainTest extends TestCase
 {
@@ -15,7 +16,7 @@ final class FunctionDecoratorChainTest extends TestCase
     #[Test]
     public function doesNotSupportWhenEmpty(): void
     {
-        $chain = new FunctionDecoratorChain([]);
+        $chain = new FunctionDecoratorChain($this->createContainer([]));
 
         self::assertFalse($chain->supports($this->createMetadata()));
     }
@@ -29,7 +30,7 @@ final class FunctionDecoratorChainTest extends TestCase
         $supported = $this->createStub(FunctionDecoratorInterface::class);
         $supported->method('supports')->willReturn(true);
 
-        $chain = new FunctionDecoratorChain([$unsupported, $supported]);
+        $chain = new FunctionDecoratorChain($this->createContainer([$unsupported, $supported]));
 
         self::assertTrue($chain->supports($this->createMetadata()));
     }
@@ -40,7 +41,7 @@ final class FunctionDecoratorChainTest extends TestCase
         $unsupported = $this->createStub(FunctionDecoratorInterface::class);
         $unsupported->method('supports')->willReturn(false);
 
-        $chain = new FunctionDecoratorChain([$unsupported]);
+        $chain = new FunctionDecoratorChain($this->createContainer([$unsupported]));
 
         self::assertFalse($chain->supports($this->createMetadata()));
     }
@@ -48,7 +49,7 @@ final class FunctionDecoratorChainTest extends TestCase
     #[Test]
     public function decorateWithNoDecorators(): void
     {
-        $chain = new FunctionDecoratorChain([]);
+        $chain = new FunctionDecoratorChain($this->createContainer([]));
         $fn = fn () => 'original';
 
         $result = $chain->decorate($fn, $this->createMetadata());
@@ -67,7 +68,7 @@ final class FunctionDecoratorChainTest extends TestCase
         $decorator2->method('supports')->willReturn(true);
         $decorator2->method('decorate')->willReturn(fn () => 'second');
 
-        $chain = new FunctionDecoratorChain([$decorator1, $decorator2]);
+        $chain = new FunctionDecoratorChain($this->createContainer([$decorator1, $decorator2]));
 
         $result = $chain->decorate(fn () => 'original', $this->createMetadata());
 
@@ -84,7 +85,7 @@ final class FunctionDecoratorChainTest extends TestCase
         $supported->method('supports')->willReturn(true);
         $supported->method('decorate')->willReturn(fn () => 'decorated');
 
-        $chain = new FunctionDecoratorChain([$unsupported, $supported]);
+        $chain = new FunctionDecoratorChain($this->createContainer([$unsupported, $supported]));
 
         $result = $chain->decorate(fn () => 'original', $this->createMetadata());
 
@@ -97,11 +98,87 @@ final class FunctionDecoratorChainTest extends TestCase
         $unsupported = $this->createStub(FunctionDecoratorInterface::class);
         $unsupported->method('supports')->willReturn(false);
 
-        $chain = new FunctionDecoratorChain([$unsupported]);
+        $chain = new FunctionDecoratorChain($this->createContainer([$unsupported]));
         $fn = fn () => 'original';
 
         $result = $chain->decorate($fn, $this->createMetadata());
 
         self::assertSame('original', $result());
+    }
+
+    #[Test]
+    public function supportsUsesGroupDecorators(): void
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+
+        $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
+
+        self::assertTrue($chain->supports($this->createMetadata(), 'my_group'));
+    }
+
+    #[Test]
+    public function supportsReturnsFalseWhenGroupHasNoDecorators(): void
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+
+        $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
+
+        self::assertFalse($chain->supports($this->createMetadata(), 'other_group'));
+    }
+
+    #[Test]
+    public function decorateUsesGroupDecorators(): void
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+        $decorator->method('decorate')->willReturn(fn () => 'from_group');
+
+        $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
+
+        $result = $chain->decorate(fn () => 'original', $this->createMetadata(), 'my_group');
+
+        self::assertSame('from_group', $result());
+    }
+
+    #[Test]
+    public function decorateReturnsOriginalWhenGroupHasNoDecorators(): void
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+
+        $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
+        $fn = fn () => 'original';
+
+        $result = $chain->decorate($fn, $this->createMetadata(), 'other_group');
+
+        self::assertSame($fn, $result);
+    }
+
+    #[Test]
+    public function nullGroupFallsBackToNoneGroup(): void
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+        $decorator->method('decorate')->willReturn(fn () => 'from_none');
+
+        $chain = new FunctionDecoratorChain($this->createContainer([$decorator]));
+
+        $result = $chain->decorate(fn () => 'original', $this->createMetadata(), null);
+
+        self::assertSame('from_none', $result());
+    }
+
+    /**
+     * @param list<FunctionDecoratorInterface> $decorators
+     */
+    private function createContainer(array $decorators, string $group = '__NONE__'): ContainerInterface
+    {
+        $container = $this->createStub(ContainerInterface::class);
+        $container->method('has')->willReturnCallback(fn (string $id) => $id === $group);
+        $container->method('get')->willReturnCallback(fn (string $id) => $id === $group ? $decorators : []);
+
+        return $container;
     }
 }

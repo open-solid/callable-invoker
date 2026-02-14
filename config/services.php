@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\abstract_arg;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -32,7 +31,7 @@ return static function (ContainerConfigurator $container): void {
         ->tag('callable_invoker.value_resolver', ['priority' => -200]);
 
     $services->set('callable_invoker.decorator_chain', FunctionDecoratorChain::class)
-        ->args([tagged_iterator('callable_invoker.decorator')]);
+        ->args([abstract_arg('groups of decorators')]);
 
     $services->set('callable_invoker.value_resolver_chain', ParameterValueResolverChain::class)
         ->args([abstract_arg('groups of value resolvers')]);

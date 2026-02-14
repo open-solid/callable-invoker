@@ -45,7 +45,13 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
      */
     private function getResolvers(?string $group): iterable
     {
+        $key = $group ?? '__NONE__';
+
+        if (!$this->container->has($key)) {
+            return [];
+        }
+
         /* @phpstan-ignore-next-line */
-        return $this->container->get($group ?? '__NONE__');
+        return $this->container->get($key);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace OpenSolid\CallableInvoker;
 
+use OpenSolid\CallableInvoker\Decorator\Attribute\AsDecorator;
+use OpenSolid\CallableInvoker\DependecyInjection\Compiler\FunctionDecoratorPass;
 use OpenSolid\CallableInvoker\DependecyInjection\Compiler\ParameterValueResolverPass;
 use OpenSolid\CallableInvoker\ValueResolver\Attribute\AsValueResolver;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -14,6 +16,7 @@ class CallableInvokerBundle extends AbstractBundle
 {
     public function build(ContainerBuilder $container): void
     {
+        $container->addCompilerPass(new FunctionDecoratorPass());
         $container->addCompilerPass(new ParameterValueResolverPass());
     }
 
@@ -27,6 +30,10 @@ class CallableInvokerBundle extends AbstractBundle
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
+        $builder->registerAttributeForAutoconfiguration(AsDecorator::class, static function (ChildDefinition $definition, AsDecorator $attribute) {
+            $definition->addTag('callable_invoker.decorator', ['groups' => $attribute->groups]);
+        });
+
         $builder->registerAttributeForAutoconfiguration(AsValueResolver::class, static function (ChildDefinition $definition, AsValueResolver $attribute) {
             $definition->addTag('callable_invoker.value_resolver', ['groups' => $attribute->groups]);
         });
