@@ -31,11 +31,11 @@ class CallableInvokerBundle extends AbstractBundle
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $builder->registerAttributeForAutoconfiguration(AsFunctionDecorator::class, static function (ChildDefinition $definition, AsFunctionDecorator $attribute) {
-            $definition->addTag('callable_invoker.decorator', ['groups' => $attribute->groups]);
+            $definition->addTag('callable_invoker.decorator', ['groups' => $attribute->groups, 'priority' => $attribute->priority]);
         });
 
         $builder->registerAttributeForAutoconfiguration(AsParameterValueResolver::class, static function (ChildDefinition $definition, AsParameterValueResolver $attribute) {
-            $definition->addTag('callable_invoker.value_resolver', ['groups' => $attribute->groups]);
+            $definition->addTag('callable_invoker.value_resolver', ['groups' => $attribute->groups, 'priority' => $attribute->priority]);
         });
 
         $container->import('../config/services.php');

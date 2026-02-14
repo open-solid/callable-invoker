@@ -15,7 +15,7 @@ final readonly class AsFunctionDecorator
     /**
      * @param list<string>|string $groups
      */
-    public function __construct(array|string $groups)
+    public function __construct(array|string $groups, public int $priority = 0)
     {
         $this->groups = (array) $groups;
     }
