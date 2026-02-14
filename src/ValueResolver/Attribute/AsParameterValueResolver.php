@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OpenSolid\CallableInvoker\Decorator\Attribute;
+namespace OpenSolid\CallableInvoker\ValueResolver\Attribute;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]
-final readonly class AsDecorator
+final readonly class AsParameterValueResolver
 {
     /**
      * @var list<string>
