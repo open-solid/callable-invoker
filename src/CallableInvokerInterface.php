@@ -7,5 +7,5 @@ interface CallableInvokerInterface
     /**
      * @param array<string, mixed> $context
      */
-    public function invoke(callable $callable, array $context = []): mixed;
+    public function invoke(callable $callable, array $context = [], ?string $group = null): mixed;
 }
