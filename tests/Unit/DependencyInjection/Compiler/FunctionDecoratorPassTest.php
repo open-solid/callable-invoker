@@ -121,6 +121,68 @@ final class FunctionDecoratorPassTest extends TestCase
         self::assertArrayNotHasKey('__NONE__', $values);
     }
 
+    #[Test]
+    public function decoratorsAreSortedByPriorityDescending(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerDecorator($container, 'decorator_low', [['priority' => -100]]);
+        $this->registerDecorator($container, 'decorator_high', [['priority' => 100]]);
+        $this->registerDecorator($container, 'decorator_default');
+
+        new FunctionDecoratorPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['decorator_high', 'decorator_default', 'decorator_low'], $values['__NONE__']);
+    }
+
+    #[Test]
+    public function decoratorsAreSortedByPriorityWithinGroups(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerDecorator($container, 'decorator_low', [['groups' => ['foo'], 'priority' => -10]]);
+        $this->registerDecorator($container, 'decorator_high', [['groups' => ['foo'], 'priority' => 10]]);
+
+        new FunctionDecoratorPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['decorator_high', 'decorator_low'], $values['foo']);
+    }
+
+    #[Test]
+    public function decoratorWithoutPriorityDefaultsToZero(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerDecorator($container, 'decorator_positive', [['priority' => 1]]);
+        $this->registerDecorator($container, 'decorator_default');
+        $this->registerDecorator($container, 'decorator_negative', [['priority' => -1]]);
+
+        new FunctionDecoratorPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['decorator_positive', 'decorator_default', 'decorator_negative'], $values['__NONE__']);
+    }
+
+    #[Test]
+    public function decoratorInNoneGroupUsesMaxPriorityFromAllTags(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerDecorator($container, 'decorator_multi', [['priority' => 5], ['priority' => 20]]);
+        $this->registerDecorator($container, 'decorator_single', [['priority' => 10]]);
+
+        new FunctionDecoratorPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['decorator_multi', 'decorator_single'], $values['__NONE__']);
+    }
+
     private function createContainerWithChainDefinition(): ContainerBuilder
     {
         $container = new ContainerBuilder();

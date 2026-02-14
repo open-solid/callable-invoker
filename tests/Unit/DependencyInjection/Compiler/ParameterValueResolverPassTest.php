@@ -121,6 +121,68 @@ final class ParameterValueResolverPassTest extends TestCase
         self::assertArrayNotHasKey('__NONE__', $values);
     }
 
+    #[Test]
+    public function resolversAreSortedByPriorityDescending(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerResolver($container, 'resolver_low', [['priority' => -100]]);
+        $this->registerResolver($container, 'resolver_high', [['priority' => 100]]);
+        $this->registerResolver($container, 'resolver_default');
+
+        new ParameterValueResolverPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['resolver_high', 'resolver_default', 'resolver_low'], $values['__NONE__']);
+    }
+
+    #[Test]
+    public function resolversAreSortedByPriorityWithinGroups(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerResolver($container, 'resolver_low', [['groups' => ['foo'], 'priority' => -10]]);
+        $this->registerResolver($container, 'resolver_high', [['groups' => ['foo'], 'priority' => 10]]);
+
+        new ParameterValueResolverPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['resolver_high', 'resolver_low'], $values['foo']);
+    }
+
+    #[Test]
+    public function resolverWithoutPriorityDefaultsToZero(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerResolver($container, 'resolver_positive', [['priority' => 1]]);
+        $this->registerResolver($container, 'resolver_default');
+        $this->registerResolver($container, 'resolver_negative', [['priority' => -1]]);
+
+        new ParameterValueResolverPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['resolver_positive', 'resolver_default', 'resolver_negative'], $values['__NONE__']);
+    }
+
+    #[Test]
+    public function resolverInNoneGroupUsesMaxPriorityFromAllTags(): void
+    {
+        $container = $this->createContainerWithChainDefinition();
+        $this->registerResolver($container, 'resolver_multi', [['priority' => 5], ['priority' => 20]]);
+        $this->registerResolver($container, 'resolver_single', [['priority' => 10]]);
+
+        new ParameterValueResolverPass()->process($container);
+
+        $locator = $this->getServiceLocatorArgument($container);
+        $values = $locator->getValues();
+
+        self::assertReferencesEqual(['resolver_multi', 'resolver_single'], $values['__NONE__']);
+    }
+
     private function createContainerWithChainDefinition(): ContainerBuilder
     {
         $container = new ContainerBuilder();
