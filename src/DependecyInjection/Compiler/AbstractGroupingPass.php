@@ -12,6 +12,8 @@ use Symfony\Component\DependencyInjection\Reference;
 
 abstract readonly class AbstractGroupingPass implements CompilerPassInterface
 {
+    private const string DEFAULT_GROUP = '__NONE__';
+
     public function __construct(
         private string $serviceId,
         private string $tagName,
@@ -20,37 +22,51 @@ abstract readonly class AbstractGroupingPass implements CompilerPassInterface
 
     public function process(ContainerBuilder $container): void
     {
-        $definition = $container->getDefinition($this->serviceId);
+        $grouped = $this->resolveGroups($container);
 
-        /** @var array<string, array<string, array{ref: Reference, priority: int}>> $grouped */
+        $locator = [];
+        foreach ($grouped as $group => $entries) {
+            uasort($entries, static fn (array $a, array $b) => $b['priority'] <=> $a['priority']);
+            $locator[$group] = new IteratorArgument(array_column($entries, 'ref'));
+        }
+
+        $container->getDefinition($this->serviceId)
+            ->setArgument(0, new ServiceLocatorArgument($locator));
+    }
+
+    /**
+     * @return array<string, array<string, array{ref: Reference, priority: int}>>
+     */
+    private function resolveGroups(ContainerBuilder $container): array
+    {
         $grouped = [];
+
         foreach ($container->findTaggedServiceIds($this->tagName) as $id => $tags) {
             if ($this->serviceId === $id) {
                 continue;
             }
 
+            $ref = new Reference($id);
             $hasExplicitGroup = false;
+            /** @var int|null $maxPriority */
             $maxPriority = null;
+
             /** @var array{priority?: int, groups?: list<string>} $tag */
             foreach ($tags as $tag) {
                 $priority = $tag['priority'] ?? 0;
-                $maxPriority = max($maxPriority ?? $priority, $priority);
+                $maxPriority = null === $maxPriority ? $priority : max($maxPriority, $priority);
                 foreach ($tag['groups'] ?? [] as $group) {
-                    $grouped[$group][$id] = ['ref' => new Reference($id), 'priority' => $priority];
+                    $grouped[$group][$id] = ['ref' => $ref, 'priority' => $priority];
                     $hasExplicitGroup = true;
                 }
             }
+
             if (!$hasExplicitGroup) {
-                $grouped['__NONE__'][$id] = ['ref' => new Reference($id), 'priority' => $maxPriority];
+                \assert(null !== $maxPriority);
+                $grouped[self::DEFAULT_GROUP][$id] = ['ref' => $ref, 'priority' => $maxPriority];
             }
         }
 
-        $locator = [];
-        foreach ($grouped as $group => $entries) {
-            uasort($entries, static fn (array $a, array $b) => $b['priority'] <=> $a['priority']);
-            $locator[$group] = new IteratorArgument(array_map(static fn (array $entry) => $entry['ref'], array_values($entries)));
-        }
-
-        $definition->setArgument(0, new ServiceLocatorArgument($locator));
+        return $grouped;
     }
 }
