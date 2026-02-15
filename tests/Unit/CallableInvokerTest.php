@@ -5,7 +5,7 @@ namespace OpenSolid\CallableInvoker\Tests\Unit;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
-use OpenSolid\CallableInvoker\FunctionMetadata;
+use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -46,7 +46,7 @@ final class CallableInvokerTest extends TestCase
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
         $resolver->method('resolve')->willReturnCallback(
-            fn (\ReflectionParameter $param, FunctionMetadata $metadata) => $metadata->context[$param->getName()],
+            fn (\ReflectionParameter $param, CallableMetadata $metadata) => $metadata->context[$param->getName()],
         );
 
         $invoker = new CallableInvoker(
@@ -176,7 +176,7 @@ final class CallableInvokerTest extends TestCase
         $capturedMetadata = null;
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
-            function (\Closure $fn, FunctionMetadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
+            function (\Closure $fn, CallableMetadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
                 $capturedClosure = $fn;
                 $capturedMetadata = $metadata;
 
@@ -206,11 +206,11 @@ final class CallableInvokerTest extends TestCase
         return $decorator;
     }
 
-    private function createCapturingDecorator(?FunctionMetadata &$capturedMetadata): FunctionDecoratorInterface
+    private function createCapturingDecorator(?CallableMetadata &$capturedMetadata): FunctionDecoratorInterface
     {
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
-            function (\Closure $fn, FunctionMetadata $metadata) use (&$capturedMetadata) {
+            function (\Closure $fn, CallableMetadata $metadata) use (&$capturedMetadata) {
                 $capturedMetadata = $metadata;
 
                 return $fn;

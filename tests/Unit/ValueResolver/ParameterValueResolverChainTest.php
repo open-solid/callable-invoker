@@ -130,7 +130,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
-        self::assertTrue($chain->supports($parameter, $this->createMetadata(), 'my_group'));
+        self::assertTrue($chain->supports($parameter, $this->createMetadata(group: 'my_group')));
     }
 
     #[Test]
@@ -142,7 +142,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
-        self::assertFalse($chain->supports($parameter, $this->createMetadata(), 'other_group'));
+        self::assertFalse($chain->supports($parameter, $this->createMetadata(group: 'other_group')));
     }
 
     #[Test]
@@ -155,7 +155,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain = new ParameterValueResolverChain($this->createContainer([$resolver], 'my_group'));
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
-        self::assertSame('from_group', $chain->resolve($parameter, $this->createMetadata(), 'my_group'));
+        self::assertSame('from_group', $chain->resolve($parameter, $this->createMetadata(group: 'my_group')));
     }
 
     #[Test]
@@ -168,7 +168,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $parameter = $this->getParameter(fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
-        $chain->resolve($parameter, $this->createMetadata(), 'other_group');
+        $chain->resolve($parameter, $this->createMetadata(group: 'other_group'));
     }
 
     #[Test]

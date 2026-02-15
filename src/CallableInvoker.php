@@ -18,20 +18,20 @@ final readonly class CallableInvoker implements CallableInvokerInterface
      *
      * @throws \ReflectionException
      */
-    public function invoke(callable $callable, array $context = [], ?string $group = null): mixed
+    public function invoke(callable $callable, array $context = [], string $group = self::DEFAULT_GROUP): mixed
     {
         $closure = $callable(...);
         $function = new \ReflectionFunction($closure);
         $scope = $function->getClosureScopeClass()?->getName();
         $identifier = null !== $scope ? $scope.'::'.$function->getName() : $function->getName();
-        $metadata = new FunctionMetadata($function, $identifier, $context);
+        $metadata = new CallableMetadata($function, $identifier, $context, $group);
 
         $parameters = [];
         foreach ($function->getParameters() as $parameter) {
-            $parameters[] = $this->valueResolver->resolve($parameter, $metadata, $group);
+            $parameters[] = $this->valueResolver->resolve($parameter, $metadata);
         }
 
-        $decorated = $this->decorator->decorate($closure, $metadata, $group);
+        $decorated = $this->decorator->decorate($closure, $metadata);
 
         return $decorated(...$parameters);
     }

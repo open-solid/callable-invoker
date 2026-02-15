@@ -2,7 +2,8 @@
 
 namespace OpenSolid\CallableInvoker\Tests\Unit;
 
-use OpenSolid\CallableInvoker\FunctionMetadata;
+use OpenSolid\CallableInvoker\CallableInvokerInterface;
+use OpenSolid\CallableInvoker\CallableMetadata;
 
 trait TestHelper
 {
@@ -21,8 +22,8 @@ trait TestHelper
     /**
      * @param array<string, mixed> $context
      */
-    private function createMetadata(array $context = []): FunctionMetadata
+    private function createMetadata(array $context = [], string $group = CallableInvokerInterface::DEFAULT_GROUP): CallableMetadata
     {
-        return new FunctionMetadata(new \ReflectionFunction(fn () => null), 'test', $context);
+        return new CallableMetadata(new \ReflectionFunction(fn () => null), 'test', $context, $group);
     }
 }

@@ -9,7 +9,7 @@ use OpenSolid\CallableInvoker\Exception\UntypedParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
-use OpenSolid\CallableInvoker\FunctionMetadata;
+use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -173,12 +173,12 @@ final class CallableInvokerBundleTest extends TestCase
 
 final class LoggingDecorator implements FunctionDecoratorInterface
 {
-    public function supports(FunctionMetadata $metadata, ?string $group = null): bool
+    public function supports(CallableMetadata $metadata, ?string $group = null): bool
     {
         return true;
     }
 
-    public function decorate(\Closure $function, FunctionMetadata $metadata, ?string $group = null): \Closure
+    public function decorate(\Closure $function, CallableMetadata $metadata, ?string $group = null): \Closure
     {
         return static fn (...$args) => '[decorated] '.$function(...$args);
     }
@@ -186,12 +186,12 @@ final class LoggingDecorator implements FunctionDecoratorInterface
 
 final class GreetingValueResolver implements ParameterValueResolverInterface
 {
-    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): bool
+    public function supports(\ReflectionParameter $parameter, CallableMetadata $metadata, ?string $group = null): bool
     {
         return 'greeting' === $parameter->getName();
     }
 
-    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): string
+    public function resolve(\ReflectionParameter $parameter, CallableMetadata $metadata, ?string $group = null): string
     {
         return 'Hey!';
     }

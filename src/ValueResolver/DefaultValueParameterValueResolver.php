@@ -2,16 +2,16 @@
 
 namespace OpenSolid\CallableInvoker\ValueResolver;
 
-use OpenSolid\CallableInvoker\FunctionMetadata;
+use OpenSolid\CallableInvoker\CallableMetadata;
 
 final readonly class DefaultValueParameterValueResolver implements ParameterValueResolverInterface
 {
-    public function supports(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): bool
+    public function supports(\ReflectionParameter $parameter, CallableMetadata $metadata): bool
     {
         return $parameter->isDefaultValueAvailable();
     }
 
-    public function resolve(\ReflectionParameter $parameter, FunctionMetadata $metadata, ?string $group = null): mixed
+    public function resolve(\ReflectionParameter $parameter, CallableMetadata $metadata): mixed
     {
         return $parameter->getDefaultValue();
     }

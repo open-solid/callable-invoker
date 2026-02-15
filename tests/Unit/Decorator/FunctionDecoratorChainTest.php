@@ -114,7 +114,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
 
-        self::assertTrue($chain->supports($this->createMetadata(), 'my_group'));
+        self::assertTrue($chain->supports($this->createMetadata(group: 'my_group')));
     }
 
     #[Test]
@@ -125,7 +125,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
 
-        self::assertFalse($chain->supports($this->createMetadata(), 'other_group'));
+        self::assertFalse($chain->supports($this->createMetadata(group: 'other_group')));
     }
 
     #[Test]
@@ -137,7 +137,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
 
-        $result = $chain->decorate(fn () => 'original', $this->createMetadata(), 'my_group');
+        $result = $chain->decorate(fn () => 'original', $this->createMetadata(group: 'my_group'));
 
         self::assertSame('from_group', $result());
     }
@@ -151,7 +151,7 @@ final class FunctionDecoratorChainTest extends TestCase
         $chain = new FunctionDecoratorChain($this->createContainer([$decorator], 'my_group'));
         $fn = fn () => 'original';
 
-        $result = $chain->decorate($fn, $this->createMetadata(), 'other_group');
+        $result = $chain->decorate($fn, $this->createMetadata(group: 'other_group'));
 
         self::assertSame($fn, $result);
     }
@@ -165,7 +165,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain($this->createContainer([$decorator]));
 
-        $result = $chain->decorate(fn () => 'original', $this->createMetadata(), null);
+        $result = $chain->decorate(fn () => 'original', $this->createMetadata());
 
         self::assertSame('from_none', $result());
     }

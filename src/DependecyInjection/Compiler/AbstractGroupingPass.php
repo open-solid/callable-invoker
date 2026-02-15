@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenSolid\CallableInvoker\DependecyInjection\Compiler;
 
+use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -12,8 +13,6 @@ use Symfony\Component\DependencyInjection\Reference;
 
 abstract readonly class AbstractGroupingPass implements CompilerPassInterface
 {
-    private const string DEFAULT_GROUP = '__NONE__';
-
     public function __construct(
         private string $serviceId,
         private string $tagName,
@@ -67,9 +66,10 @@ abstract readonly class AbstractGroupingPass implements CompilerPassInterface
         }
 
         if ($ungrouped) {
-            $grouped[self::DEFAULT_GROUP] = ($grouped[self::DEFAULT_GROUP] ?? []) + $ungrouped;
+            $defaultGroup = CallableInvokerInterface::DEFAULT_GROUP;
+            $grouped[$defaultGroup] = ($grouped[$defaultGroup] ?? []) + $ungrouped;
             foreach ($grouped as $group => &$entries) {
-                if (self::DEFAULT_GROUP !== $group) {
+                if ($defaultGroup !== $group) {
                     $entries += $ungrouped;
                 }
             }

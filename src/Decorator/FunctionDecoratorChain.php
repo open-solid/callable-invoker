@@ -2,7 +2,7 @@
 
 namespace OpenSolid\CallableInvoker\Decorator;
 
-use OpenSolid\CallableInvoker\FunctionMetadata;
+use OpenSolid\CallableInvoker\CallableMetadata;
 use Psr\Container\ContainerInterface;
 
 final readonly class FunctionDecoratorChain implements FunctionDecoratorInterface
@@ -12,10 +12,10 @@ final readonly class FunctionDecoratorChain implements FunctionDecoratorInterfac
     ) {
     }
 
-    public function supports(FunctionMetadata $metadata, ?string $group = null): bool
+    public function supports(CallableMetadata $metadata): bool
     {
-        foreach ($this->getDecorators($group) as $decorator) {
-            if ($decorator->supports($metadata, $group)) {
+        foreach ($this->getDecorators($metadata->group) as $decorator) {
+            if ($decorator->supports($metadata)) {
                 return true;
             }
         }
@@ -23,11 +23,11 @@ final readonly class FunctionDecoratorChain implements FunctionDecoratorInterfac
         return false;
     }
 
-    public function decorate(\Closure $function, FunctionMetadata $metadata, ?string $group = null): \Closure
+    public function decorate(\Closure $function, CallableMetadata $metadata): \Closure
     {
-        foreach ($this->getDecorators($group) as $decorator) {
-            if ($decorator->supports($metadata, $group)) {
-                $function = $decorator->decorate($function, $metadata, $group);
+        foreach ($this->getDecorators($metadata->group) as $decorator) {
+            if ($decorator->supports($metadata)) {
+                $function = $decorator->decorate($function, $metadata);
             }
         }
 
