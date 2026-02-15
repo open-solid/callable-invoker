@@ -70,7 +70,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $values = $this->getLocatorValues($container);
 
         self::assertCount(2, $values);
-        self::assertReferencesEqual(['service_a'], $values['foo']);
+        self::assertReferencesEqual(['service_a', 'service_b'], $values['foo']);
         self::assertReferencesEqual(['service_b'], $values['__NONE__']);
     }
 
@@ -166,6 +166,40 @@ abstract class AbstractGroupingPassTest extends TestCase
         $values = $this->getLocatorValues($container);
 
         self::assertReferencesEqual(['service_positive', 'service_default', 'service_negative'], $values['__NONE__']);
+    }
+
+    #[Test]
+    public function ungroupedServicesAreIncludedInAllExplicitGroups(): void
+    {
+        $container = $this->createContainer();
+        $this->registerTaggedService($container, 'grouped_a', [['groups' => ['foo']]]);
+        $this->registerTaggedService($container, 'grouped_b', [['groups' => ['bar']]]);
+        $this->registerTaggedService($container, 'ungrouped');
+
+        $this->createPass()->process($container);
+
+        $values = $this->getLocatorValues($container);
+
+        self::assertCount(3, $values);
+        self::assertReferencesEqual(['grouped_a', 'ungrouped'], $values['foo']);
+        self::assertReferencesEqual(['grouped_b', 'ungrouped'], $values['bar']);
+        self::assertReferencesEqual(['ungrouped'], $values['__NONE__']);
+    }
+
+    #[Test]
+    public function ungroupedServicesAreSortedByPriorityWithinExplicitGroups(): void
+    {
+        $container = $this->createContainer();
+        $this->registerTaggedService($container, 'grouped_high', [['groups' => ['foo'], 'priority' => 10]]);
+        $this->registerTaggedService($container, 'ungrouped_mid', [['priority' => 5]]);
+        $this->registerTaggedService($container, 'grouped_low', [['groups' => ['foo'], 'priority' => -10]]);
+
+        $this->createPass()->process($container);
+
+        $values = $this->getLocatorValues($container);
+
+        self::assertReferencesEqual(['grouped_high', 'ungrouped_mid', 'grouped_low'], $values['foo']);
+        self::assertReferencesEqual(['ungrouped_mid'], $values['__NONE__']);
     }
 
     #[Test]

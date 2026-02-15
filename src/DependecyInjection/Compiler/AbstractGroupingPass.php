@@ -22,10 +22,8 @@ abstract readonly class AbstractGroupingPass implements CompilerPassInterface
 
     public function process(ContainerBuilder $container): void
     {
-        $grouped = $this->resolveGroups($container);
-
         $locator = [];
-        foreach ($grouped as $group => $entries) {
+        foreach ($this->resolveGroups($container) as $group => $entries) {
             uasort($entries, static fn (array $a, array $b) => $b['priority'] <=> $a['priority']);
             $locator[$group] = new IteratorArgument(array_column($entries, 'ref'));
         }
@@ -40,6 +38,7 @@ abstract readonly class AbstractGroupingPass implements CompilerPassInterface
     private function resolveGroups(ContainerBuilder $container): array
     {
         $grouped = [];
+        $ungrouped = [];
 
         foreach ($container->findTaggedServiceIds($this->tagName) as $id => $tags) {
             if ($this->serviceId === $id) {
@@ -63,8 +62,18 @@ abstract readonly class AbstractGroupingPass implements CompilerPassInterface
 
             if (!$hasExplicitGroup) {
                 \assert(null !== $maxPriority);
-                $grouped[self::DEFAULT_GROUP][$id] = ['ref' => $ref, 'priority' => $maxPriority];
+                $ungrouped[$id] = ['ref' => $ref, 'priority' => $maxPriority];
             }
+        }
+
+        if ($ungrouped) {
+            $grouped[self::DEFAULT_GROUP] = ($grouped[self::DEFAULT_GROUP] ?? []) + $ungrouped;
+            foreach ($grouped as $group => &$entries) {
+                if (self::DEFAULT_GROUP !== $group) {
+                    $entries += $ungrouped;
+                }
+            }
+            unset($entries);
         }
 
         return $grouped;
