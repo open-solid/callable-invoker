@@ -29,7 +29,6 @@ class HelloHandler
 }
 
 $handler = new HelloHandler();
-
 $invoker = new CallableInvoker();
 $result = $invoker->invoke(callable: $handler, context: ['name' => 'Alice']);
 
