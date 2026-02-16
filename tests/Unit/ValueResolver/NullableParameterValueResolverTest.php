@@ -15,7 +15,7 @@ final class NullableParameterValueResolverTest extends TestCase
     public function supportsNullableParameter(): void
     {
         $resolver = new NullableParameterValueResolver();
-        $parameter = $this->getParameter(fn (?string $name) => null, 'name');
+        $parameter = $this->getParameter(static fn (?string $name) => null, 'name');
 
         self::assertTrue($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -24,7 +24,7 @@ final class NullableParameterValueResolverTest extends TestCase
     public function doesNotSupportNonNullableParameter(): void
     {
         $resolver = new NullableParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+        $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertFalse($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -33,7 +33,7 @@ final class NullableParameterValueResolverTest extends TestCase
     public function resolveNullableParameter(): void
     {
         $resolver = new NullableParameterValueResolver();
-        $parameter = $this->getParameter(fn (?string $name) => null, 'name');
+        $parameter = $this->getParameter(static fn (?string $name) => null, 'name');
 
         self::assertNull($resolver->resolve($parameter, $this->createMetadata()));
     }

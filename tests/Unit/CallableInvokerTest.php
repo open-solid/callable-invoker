@@ -3,9 +3,9 @@
 namespace OpenSolid\CallableInvoker\Tests\Unit;
 
 use OpenSolid\CallableInvoker\CallableInvoker;
+use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
-use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ final class CallableInvokerTest extends TestCase
             $this->createStub(ParameterValueResolverInterface::class),
         );
 
-        $result = $invoker->invoke(fn () => 'hello');
+        $result = $invoker->invoke(static fn () => 'hello');
 
         self::assertSame('hello', $result);
     }
@@ -36,7 +36,7 @@ final class CallableInvokerTest extends TestCase
             $resolver,
         );
 
-        $result = $invoker->invoke(fn (string $name) => "Hello, $name!");
+        $result = $invoker->invoke(static fn (string $name) => "Hello, $name!");
 
         self::assertSame('Hello, World!', $result);
     }
@@ -46,7 +46,7 @@ final class CallableInvokerTest extends TestCase
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
         $resolver->method('resolve')->willReturnCallback(
-            fn (\ReflectionParameter $param, CallableMetadata $metadata) => $metadata->context[$param->getName()],
+            static fn (\ReflectionParameter $param, CallableMetadata $metadata) => $metadata->context[$param->getName()],
         );
 
         $invoker = new CallableInvoker(
@@ -54,7 +54,7 @@ final class CallableInvokerTest extends TestCase
             $resolver,
         );
 
-        $result = $invoker->invoke(fn (string $name) => "Hello, $name!", ['name' => 'PHP']);
+        $result = $invoker->invoke(static fn (string $name) => "Hello, $name!", ['name' => 'PHP']);
 
         self::assertSame('Hello, PHP!', $result);
     }
@@ -63,14 +63,14 @@ final class CallableInvokerTest extends TestCase
     public function invokeAppliesDecorator(): void
     {
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
-        $decorator->method('decorate')->willReturn(fn () => 'decorated');
+        $decorator->method('decorate')->willReturn(static fn () => 'decorated');
 
         $invoker = new CallableInvoker(
             $decorator,
             $this->createStub(ParameterValueResolverInterface::class),
         );
 
-        $result = $invoker->invoke(fn () => 'original');
+        $result = $invoker->invoke(static fn () => 'original');
 
         self::assertSame('decorated', $result);
     }
@@ -100,7 +100,7 @@ final class CallableInvokerTest extends TestCase
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
         $resolver->method('resolve')->willReturnCallback(
-            fn (\ReflectionParameter $param) => match ($param->getName()) {
+            static fn (\ReflectionParameter $param) => match ($param->getName()) {
                 'greeting' => 'Hello',
                 'name' => 'World',
             },
@@ -111,7 +111,7 @@ final class CallableInvokerTest extends TestCase
             $resolver,
         );
 
-        $result = $invoker->invoke(fn (string $greeting, string $name) => "$greeting, $name!");
+        $result = $invoker->invoke(static fn (string $greeting, string $name) => "$greeting, $name!");
 
         self::assertSame('Hello, World!', $result);
     }
@@ -128,7 +128,7 @@ final class CallableInvokerTest extends TestCase
         );
 
         $this->expectException(ParameterNotSupportedException::class);
-        $invoker->invoke(fn (string $name) => $name);
+        $invoker->invoke(static fn (string $name) => $name);
     }
 
     #[Test]
@@ -143,7 +143,9 @@ final class CallableInvokerTest extends TestCase
         );
 
         $callable = new class {
-            public function __invoke(): void {}
+            public function __invoke(): void
+            {
+            }
         };
 
         $invoker->invoke($callable);
@@ -176,7 +178,7 @@ final class CallableInvokerTest extends TestCase
         $capturedMetadata = null;
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
-            function (\Closure $fn, CallableMetadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
+            static function (\Closure $fn, CallableMetadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
                 $capturedClosure = $fn;
                 $capturedMetadata = $metadata;
 
@@ -189,7 +191,7 @@ final class CallableInvokerTest extends TestCase
             $this->createStub(ParameterValueResolverInterface::class),
         );
 
-        $invoker->invoke(fn () => 'original', ['key' => 'value']);
+        $invoker->invoke(static fn () => 'original', ['key' => 'value']);
 
         self::assertNotNull($capturedClosure);
         self::assertSame('original', $capturedClosure());
@@ -210,7 +212,7 @@ final class CallableInvokerTest extends TestCase
     {
         $decorator = $this->createStub(FunctionDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
-            function (\Closure $fn, CallableMetadata $metadata) use (&$capturedMetadata) {
+            static function (\Closure $fn, CallableMetadata $metadata) use (&$capturedMetadata) {
                 $capturedMetadata = $metadata;
 
                 return $fn;

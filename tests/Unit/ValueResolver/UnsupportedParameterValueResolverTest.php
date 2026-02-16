@@ -17,7 +17,7 @@ final class UnsupportedParameterValueResolverTest extends TestCase
     public function supportsVariadicParameter(): void
     {
         $resolver = new UnsupportedParameterValueResolver();
-        $parameter = $this->getParameter(fn (string ...$names) => null, 'names');
+        $parameter = $this->getParameter(static fn (string ...$names) => null, 'names');
 
         self::assertTrue($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -26,7 +26,7 @@ final class UnsupportedParameterValueResolverTest extends TestCase
     public function supportsUntypedParameter(): void
     {
         $resolver = new UnsupportedParameterValueResolver();
-        $parameter = $this->getParameter(fn ($name) => null, 'name');
+        $parameter = $this->getParameter(static fn ($name) => null, 'name');
 
         self::assertTrue($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -35,7 +35,7 @@ final class UnsupportedParameterValueResolverTest extends TestCase
     public function doesNotSupportTypedParameter(): void
     {
         $resolver = new UnsupportedParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+        $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertFalse($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -44,7 +44,7 @@ final class UnsupportedParameterValueResolverTest extends TestCase
     public function throwsForVariadicParameter(): void
     {
         $resolver = new UnsupportedParameterValueResolver();
-        $parameter = $this->getParameter(fn (string ...$names) => null, 'names');
+        $parameter = $this->getParameter(static fn (string ...$names) => null, 'names');
 
         $this->expectException(VariadicParameterNotSupportedException::class);
         $this->expectExceptionMessage('Variadic parameter "$names" is not supported');
@@ -56,7 +56,7 @@ final class UnsupportedParameterValueResolverTest extends TestCase
     public function throwsForUntypedParameter(): void
     {
         $resolver = new UnsupportedParameterValueResolver();
-        $parameter = $this->getParameter(fn ($name) => null, 'name');
+        $parameter = $this->getParameter(static fn ($name) => null, 'name');
 
         $this->expectException(UntypedParameterNotSupportedException::class);
         $this->expectExceptionMessage('Untyped parameter "$name" is not supported');

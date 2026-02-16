@@ -3,8 +3,12 @@
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
+use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorGroups;
+use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorGroupsInterface;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
+use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverGroups;
+use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverGroupsInterface;
 use OpenSolid\CallableInvoker\ValueResolver\UnsupportedParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\NullableParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
@@ -30,11 +34,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('callable_invoker.value_resolver.nullable', NullableParameterValueResolver::class)
         ->tag('callable_invoker.value_resolver', ['priority' => -200]);
 
-    $services->set('callable_invoker.decorator_chain', FunctionDecoratorChain::class)
+    $services->set('callable_invoker.decorator_groups', FunctionDecoratorGroups::class)
         ->args([abstract_arg('groups of decorators')]);
+    $services->set('callable_invoker.decorator_chain', FunctionDecoratorChain::class)
+        ->args([service('callable_invoker.decorator_groups')]);
 
-    $services->set('callable_invoker.value_resolver_chain', ParameterValueResolverChain::class)
+    $services->set('callable_invoker.value_resolver_groups', ParameterValueResolverGroups::class)
         ->args([abstract_arg('groups of value resolvers')]);
+    $services->set('callable_invoker.value_resolver_chain', ParameterValueResolverChain::class)
+        ->args([service('callable_invoker.value_resolver_groups')]);
 
     $services->set('callable_invoker', CallableInvoker::class)
         ->args([
@@ -42,7 +50,9 @@ return static function (ContainerConfigurator $container): void {
             service('callable_invoker.value_resolver_chain'),
         ]);
 
-    $services->alias(CallableInvokerInterface::class, 'callable_invoker')->public();
-    $services->alias(FunctionDecoratorInterface::class, 'callable_invoker.decorator_chain')->public();
-    $services->alias(ParameterValueResolverInterface::class, 'callable_invoker.value_resolver_chain')->public();
+    $services->alias(CallableInvokerInterface::class, 'callable_invoker');
+    $services->alias(FunctionDecoratorInterface::class, 'callable_invoker.decorator_chain');
+    $services->alias(ParameterValueResolverInterface::class, 'callable_invoker.value_resolver_chain');
+    $services->alias(FunctionDecoratorGroupsInterface::class, 'callable_invoker.decorator_groups');
+    $services->alias(ParameterValueResolverGroupsInterface::class, 'callable_invoker.value_resolver_groups');
 };

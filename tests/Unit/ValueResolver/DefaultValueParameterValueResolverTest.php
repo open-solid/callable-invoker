@@ -15,7 +15,7 @@ final class DefaultValueParameterValueResolverTest extends TestCase
     public function supportsParameterWithDefaultValue(): void
     {
         $resolver = new DefaultValueParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name = 'World') => null, 'name');
+        $parameter = $this->getParameter(static fn (string $name = 'World') => null, 'name');
 
         self::assertTrue($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -24,7 +24,7 @@ final class DefaultValueParameterValueResolverTest extends TestCase
     public function doesNotSupportParameterWithoutDefaultValue(): void
     {
         $resolver = new DefaultValueParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name) => null, 'name');
+        $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertFalse($resolver->supports($parameter, $this->createMetadata()));
     }
@@ -33,7 +33,7 @@ final class DefaultValueParameterValueResolverTest extends TestCase
     public function resolveDefaultValue(): void
     {
         $resolver = new DefaultValueParameterValueResolver();
-        $parameter = $this->getParameter(fn (string $name = 'World') => null, 'name');
+        $parameter = $this->getParameter(static fn (string $name = 'World') => null, 'name');
 
         self::assertSame('World', $resolver->resolve($parameter, $this->createMetadata()));
     }
@@ -42,7 +42,7 @@ final class DefaultValueParameterValueResolverTest extends TestCase
     public function resolveNullDefaultValue(): void
     {
         $resolver = new DefaultValueParameterValueResolver();
-        $parameter = $this->getParameter(fn (?string $name = null) => null, 'name');
+        $parameter = $this->getParameter(static fn (?string $name = null) => null, 'name');
 
         self::assertNull($resolver->resolve($parameter, $this->createMetadata()));
     }

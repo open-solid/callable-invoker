@@ -8,6 +8,6 @@ final readonly class FunctionDecoratorPass extends AbstractGroupingPass
 {
     public function __construct()
     {
-        parent::__construct('callable_invoker.decorator_chain', 'callable_invoker.decorator');
+        parent::__construct('callable_invoker.decorator_groups', 'callable_invoker.decorator', ['callable_invoker.decorator_chain']);
     }
 }

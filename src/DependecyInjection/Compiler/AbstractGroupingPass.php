@@ -13,22 +13,26 @@ use Symfony\Component\DependencyInjection\Reference;
 
 abstract readonly class AbstractGroupingPass implements CompilerPassInterface
 {
+    /**
+     * @param list<string> $excludeServiceIds
+     */
     public function __construct(
         private string $serviceId,
         private string $tagName,
+        private array $excludeServiceIds = [],
     ) {
     }
 
     public function process(ContainerBuilder $container): void
     {
-        $locator = [];
+        $groups = [];
         foreach ($this->resolveGroups($container) as $group => $entries) {
             uasort($entries, static fn (array $a, array $b) => $b['priority'] <=> $a['priority']);
-            $locator[$group] = new IteratorArgument(array_column($entries, 'ref'));
+            $groups[$group] = new IteratorArgument(array_column($entries, 'ref'));
         }
 
         $container->getDefinition($this->serviceId)
-            ->setArgument(0, new ServiceLocatorArgument($locator));
+            ->setArgument(0, new ServiceLocatorArgument($groups));
     }
 
     /**
@@ -40,7 +44,7 @@ abstract readonly class AbstractGroupingPass implements CompilerPassInterface
         $ungrouped = [];
 
         foreach ($container->findTaggedServiceIds($this->tagName) as $id => $tags) {
-            if ($this->serviceId === $id) {
+            if ($this->serviceId === $id || \in_array($id, $this->excludeServiceIds, true)) {
                 continue;
             }
 

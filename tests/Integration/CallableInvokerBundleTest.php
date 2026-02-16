@@ -2,20 +2,18 @@
 
 namespace OpenSolid\CallableInvoker\Tests\Integration;
 
-use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerBundle;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
+use OpenSolid\CallableInvoker\CallableMetadata;
+use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\UntypedParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
-use OpenSolid\CallableInvoker\CallableMetadata;
-use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -41,21 +39,11 @@ final class CallableInvokerBundleTest extends TestCase
     }
 
     #[Test]
-    public function aliasesPointToCorrectServices(): void
-    {
-        $container = $this->createContainer();
-
-        self::assertInstanceOf(CallableInvoker::class, $container->get(CallableInvokerInterface::class));
-        self::assertInstanceOf(FunctionDecoratorChain::class, $container->get(FunctionDecoratorInterface::class));
-        self::assertInstanceOf(ParameterValueResolverChain::class, $container->get(ParameterValueResolverInterface::class));
-    }
-
-    #[Test]
     public function invokerResolvesDefaultValues(): void
     {
         $invoker = $this->createContainer()->get(CallableInvokerInterface::class);
 
-        $result = $invoker->invoke(fn (string $name = 'World') => "Hello, $name!");
+        $result = $invoker->invoke(static fn (string $name = 'World') => "Hello, $name!");
 
         self::assertSame('Hello, World!', $result);
     }
@@ -65,7 +53,7 @@ final class CallableInvokerBundleTest extends TestCase
     {
         $invoker = $this->createContainer()->get(CallableInvokerInterface::class);
 
-        $result = $invoker->invoke(fn (?string $name) => $name);
+        $result = $invoker->invoke(static fn (?string $name) => $name);
 
         self::assertNull($result);
     }
@@ -77,7 +65,7 @@ final class CallableInvokerBundleTest extends TestCase
 
         $this->expectException(UntypedParameterNotSupportedException::class);
 
-        $invoker->invoke(fn ($name) => $name);
+        $invoker->invoke(static fn ($name) => $name);
     }
 
     #[Test]
@@ -87,18 +75,18 @@ final class CallableInvokerBundleTest extends TestCase
 
         $this->expectException(VariadicParameterNotSupportedException::class);
 
-        $invoker->invoke(fn (string ...$names) => implode(', ', $names));
+        $invoker->invoke(static fn (string ...$names) => implode(', ', $names));
     }
 
     #[Test]
     public function customDecoratorIsApplied(): void
     {
-        $invoker = $this->createContainer(function (ContainerBuilder $container) {
+        $invoker = $this->createContainer(static function (ContainerBuilder $container) {
             $container->register('test.decorator', LoggingDecorator::class)
                 ->addTag('callable_invoker.decorator');
         })->get(CallableInvokerInterface::class);
 
-        $result = $invoker->invoke(fn (string $name = 'World') => "Hello, $name!");
+        $result = $invoker->invoke(static fn (string $name = 'World') => "Hello, $name!");
 
         self::assertSame('[decorated] Hello, World!', $result);
     }
@@ -106,12 +94,12 @@ final class CallableInvokerBundleTest extends TestCase
     #[Test]
     public function customValueResolverIsApplied(): void
     {
-        $invoker = $this->createContainer(function (ContainerBuilder $container) {
+        $invoker = $this->createContainer(static function (ContainerBuilder $container) {
             $container->register('test.value_resolver', GreetingValueResolver::class)
                 ->addTag('callable_invoker.value_resolver');
         })->get(CallableInvokerInterface::class);
 
-        $result = $invoker->invoke(fn (string $greeting) => $greeting);
+        $result = $invoker->invoke(static fn (string $greeting) => $greeting);
 
         self::assertSame('Hey!', $result);
     }
@@ -121,7 +109,7 @@ final class CallableInvokerBundleTest extends TestCase
      */
     private function createContainer(?\Closure $configure = null): ContainerInterface
     {
-        $this->kernel = new class ('test', true, $configure) extends Kernel {
+        $this->kernel = new class('test', true, $configure) extends Kernel implements CompilerPassInterface {
             private ?\Closure $configure;
 
             public function __construct(string $environment, bool $debug, ?\Closure $configure = null)
@@ -140,8 +128,7 @@ final class CallableInvokerBundleTest extends TestCase
                 return [
                     new FrameworkBundle(),
                     new CallableInvokerBundle(),
-                    new class extends Bundle
-                    {
+                    new class extends Bundle {
                         public function shutdown(): void
                         {
                             restore_exception_handler();
@@ -152,7 +139,7 @@ final class CallableInvokerBundleTest extends TestCase
 
             public function registerContainerConfiguration(LoaderInterface $loader): void
             {
-                $loader->load(function (ContainerBuilder $container) {
+                $loader->load(static function (ContainerBuilder $container) {
                     $container->loadFromExtension('framework', ['test' => true]);
                 });
             }
@@ -162,6 +149,11 @@ final class CallableInvokerBundleTest extends TestCase
                 if (null !== $this->configure) {
                     ($this->configure)($container);
                 }
+            }
+
+            public function process(ContainerBuilder $container): void
+            {
+                $container->getAlias(CallableInvokerInterface::class)->setPublic(true);
             }
         };
 
