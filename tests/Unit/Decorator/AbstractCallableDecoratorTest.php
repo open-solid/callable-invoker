@@ -4,7 +4,7 @@ namespace OpenSolid\CallableInvoker\Tests\Unit\Decorator;
 
 use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\Decorator\AbstractCallableDecorator;
-use OpenSolid\CallableInvoker\Decorator\ClosureHandler;
+use OpenSolid\CallableInvoker\Decorator\ClosureInvoker;
 use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -22,9 +22,9 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureHandler $handler, CallableMetadata $metadata): mixed
+            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
             {
-                return $handler->handle();
+                return $invoker->invoke();
             }
         };
 
@@ -42,9 +42,9 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureHandler $handler, CallableMetadata $metadata): mixed
+            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
             {
-                return $handler->handle();
+                return $invoker->invoke();
             }
         };
 
@@ -62,9 +62,9 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureHandler $handler, CallableMetadata $metadata): string
+            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): string
             {
-                return '[wrapped] '.$handler->handle();
+                return '[wrapped] '.$invoker->invoke();
             }
         };
 
@@ -82,7 +82,7 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureHandler $handler, CallableMetadata $metadata): string
+            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): string
             {
                 return 'short-circuited';
             }
@@ -96,10 +96,10 @@ final class AbstractCallableDecoratorTest extends TestCase
     #[Test]
     public function decorateExposesClosureAndArgumentsViaHandler(): void
     {
-        $capturedHandler = null;
+        $capturedInvoker = null;
 
-        $decorator = new class($capturedHandler) extends AbstractCallableDecorator {
-            public function __construct(private(set) ?ClosureHandler &$captured)
+        $decorator = new class($capturedInvoker) extends AbstractCallableDecorator {
+            public function __construct(private(set) ?ClosureInvoker &$captured)
             {
             }
 
@@ -108,11 +108,11 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureHandler $handler, CallableMetadata $metadata): mixed
+            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
             {
-                $this->captured = $handler;
+                $this->captured = $invoker;
 
-                return $handler->handle();
+                return $invoker->invoke();
             }
         };
 
@@ -121,8 +121,8 @@ final class AbstractCallableDecoratorTest extends TestCase
         $result = $decorated(5);
 
         self::assertSame(10, $result);
-        self::assertNotNull($capturedHandler);
-        self::assertSame([5], $capturedHandler->arguments);
-        self::assertSame($result, ($capturedHandler->closure)(5));
+        self::assertNotNull($capturedInvoker);
+        self::assertSame([5], $capturedInvoker->arguments);
+        self::assertSame($result, ($capturedInvoker->closure)(5));
     }
 }
