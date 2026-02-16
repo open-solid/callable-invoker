@@ -17,13 +17,13 @@ final readonly class UnsupportedParameterValueResolver implements ParameterValue
     public function resolve(\ReflectionParameter $parameter, CallableMetadata $metadata, ?string $group = null): never
     {
         if ($parameter->isVariadic()) {
-            throw new VariadicParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+            throw VariadicParameterNotSupportedException::create($parameter);
         }
 
         if (!$parameter->hasType()) {
-            throw new UntypedParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+            throw UntypedParameterNotSupportedException::create($parameter);
         }
 
-        throw new ParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+        throw ParameterNotSupportedException::create($parameter);
     }
 }

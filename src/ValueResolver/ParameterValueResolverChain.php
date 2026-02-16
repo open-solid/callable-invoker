@@ -49,6 +49,6 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
             }
         }
 
-        throw new ParameterNotSupportedException($parameter->getName(), $metadata->identifier);
+        throw ParameterNotSupportedException::create($parameter);
     }
 }

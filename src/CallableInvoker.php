@@ -24,10 +24,7 @@ final readonly class CallableInvoker implements CallableInvokerInterface
     {
         $closure = $callable(...);
         $function = new \ReflectionFunction($closure);
-        $scope = $function->getClosureScopeClass()?->getName();
-        $identifier = null !== $scope ? $scope.'::'.$function->getName() : $function->getName();
-        $metadata = new CallableMetadata($function, $identifier, $context, $groups);
-
+        $metadata = new CallableMetadata($function, $context, $groups);
         $parameters = [];
         foreach ($function->getParameters() as $parameter) {
             $parameters[] = $this->valueResolver->resolve($parameter, $metadata);

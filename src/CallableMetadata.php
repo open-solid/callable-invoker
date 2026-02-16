@@ -10,7 +10,6 @@ final readonly class CallableMetadata
      */
     public function __construct(
         public \ReflectionFunction $function,
-        public string $identifier,
         public array $context,
         public array $groups,
     ) {

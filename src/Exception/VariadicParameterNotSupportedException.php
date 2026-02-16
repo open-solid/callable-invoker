@@ -4,8 +4,8 @@ namespace OpenSolid\CallableInvoker\Exception;
 
 class VariadicParameterNotSupportedException extends ParameterNotSupportedException
 {
-    public function __construct(string $parameterName, string $identifier)
+    public static function create(\ReflectionParameter $parameter): self
     {
-        \InvalidArgumentException::__construct(\sprintf('Variadic parameter "$%s" is not supported in "%s".', $parameterName, $identifier));
+        return new self(\sprintf('Variadic parameter "$%s" is not supported in "%s".', $parameter->getName(), self::identifierOf($parameter)));
     }
 }

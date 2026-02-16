@@ -25,6 +25,6 @@ trait TestHelper
      */
     private function createMetadata(array $context = [], array $groups = [CallableInvokerInterface::DEFAULT_GROUP]): CallableMetadata
     {
-        return new CallableMetadata(new \ReflectionFunction(static fn () => null), 'test', $context, $groups);
+        return new CallableMetadata(new \ReflectionFunction(static fn () => null), $context, $groups);
     }
 }

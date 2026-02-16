@@ -121,7 +121,9 @@ final class CallableInvokerTest extends TestCase
     public function invokeThrowsWhenParameterCannotBeResolved(): void
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
-        $resolver->method('resolve')->willThrowException(new ParameterNotSupportedException('name', 'test'));
+        $resolver->method('resolve')->willReturnCallback(
+            static fn (\ReflectionParameter $param) => throw ParameterNotSupportedException::create($param),
+        );
 
         $invoker = new CallableInvoker(
             $this->createPassthroughDecorator(),
@@ -130,46 +132,6 @@ final class CallableInvokerTest extends TestCase
 
         $this->expectException(ParameterNotSupportedException::class);
         $invoker->invoke(static fn (string $name) => $name);
-    }
-
-    #[Test]
-    public function invokeBuildsIdentifierForClassScopedCallable(): void
-    {
-        $capturedMetadata = null;
-        $decorator = $this->createCapturingDecorator($capturedMetadata);
-
-        $invoker = new CallableInvoker(
-            $decorator,
-            $this->createStub(ParameterValueResolverInterface::class),
-        );
-
-        $callable = new class {
-            public function __invoke(): void
-            {
-            }
-        };
-
-        $invoker->invoke($callable);
-
-        self::assertNotNull($capturedMetadata);
-        self::assertStringEndsWith('::__invoke', $capturedMetadata->identifier);
-    }
-
-    #[Test]
-    public function invokeBuildsIdentifierForPlainFunction(): void
-    {
-        $capturedMetadata = null;
-        $decorator = $this->createCapturingDecorator($capturedMetadata);
-
-        $resolver = $this->createStub(ParameterValueResolverInterface::class);
-        $resolver->method('resolve')->willReturn('test');
-
-        $invoker = new CallableInvoker($decorator, $resolver);
-
-        $invoker->invoke(strlen(...));
-
-        self::assertNotNull($capturedMetadata);
-        self::assertSame('strlen', $capturedMetadata->identifier);
     }
 
     #[Test]

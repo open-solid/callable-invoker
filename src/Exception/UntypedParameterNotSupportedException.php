@@ -4,8 +4,8 @@ namespace OpenSolid\CallableInvoker\Exception;
 
 class UntypedParameterNotSupportedException extends ParameterNotSupportedException
 {
-    public function __construct(string $parameterName, string $identifier)
+    public static function create(\ReflectionParameter $parameter): self
     {
-        \InvalidArgumentException::__construct(\sprintf('Untyped parameter "$%s" is not supported in "%s".', $parameterName, $identifier));
+        return new self(\sprintf('Untyped parameter "$%s" is not supported in "%s".', $parameter->getName(), self::identifierOf($parameter)));
     }
 }
