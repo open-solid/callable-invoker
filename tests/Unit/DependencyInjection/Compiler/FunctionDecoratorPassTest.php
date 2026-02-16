@@ -2,7 +2,7 @@
 
 namespace OpenSolid\CallableInvoker\Tests\Unit\DependencyInjection\Compiler;
 
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorGroups;
+use OpenSolid\CallableInvoker\CallableServiceLocator;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\DependecyInjection\Compiler\FunctionDecoratorPass;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -21,7 +21,7 @@ final class FunctionDecoratorPassTest extends AbstractGroupingPassTest
 
     protected function getChainClass(): string
     {
-        return FunctionDecoratorGroups::class;
+        return CallableServiceLocator::class;
     }
 
     protected function getTaggedClass(): string

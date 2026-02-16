@@ -4,8 +4,8 @@ namespace OpenSolid\CallableInvoker\Tests\Unit\ValueResolver;
 
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\SkipParameterException;
+use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
-use OpenSolid\CallableInvoker\ValueResolver\InMemoryParameterValueResolverGroups;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -24,7 +24,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $supported = $this->createStub(ParameterValueResolverInterface::class);
         $supported->method('supports')->willReturn(true);
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$unsupported, $supported]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$unsupported, $supported]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertTrue($chain->supports($parameter, $this->createMetadata()));
@@ -36,7 +36,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $unsupported = $this->createStub(ParameterValueResolverInterface::class);
         $unsupported->method('supports')->willReturn(false);
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$unsupported]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$unsupported]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertFalse($chain->supports($parameter, $this->createMetadata()));
@@ -58,7 +58,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturn('resolved');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$resolver]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertSame('resolved', $chain->resolve($parameter, $this->createMetadata()));
@@ -74,7 +74,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $supported->method('supports')->willReturn(true);
         $supported->method('resolve')->willReturn('fallback');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$unsupported, $supported]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$unsupported, $supported]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertSame('fallback', $chain->resolve($parameter, $this->createMetadata()));
@@ -86,7 +86,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $unsupported = $this->createStub(ParameterValueResolverInterface::class);
         $unsupported->method('supports')->willReturn(false);
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$unsupported]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$unsupported]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
@@ -105,7 +105,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $fallback->method('supports')->willReturn(true);
         $fallback->method('resolve')->willReturn('fallback');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$skipping, $fallback]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$skipping, $fallback]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertSame('fallback', $chain->resolve($parameter, $this->createMetadata()));
@@ -127,7 +127,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
         $resolver->method('supports')->willReturn(true);
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertTrue($chain->supports($parameter, $this->createMetadata(groups: ['my_group'])));
@@ -139,7 +139,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
         $resolver->method('supports')->willReturn(true);
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertFalse($chain->supports($parameter, $this->createMetadata(groups: ['other_group'])));
@@ -152,7 +152,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturn('from_group');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertSame('from_group', $chain->resolve($parameter, $this->createMetadata(groups: ['my_group'])));
@@ -164,7 +164,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
         $resolver->method('supports')->willReturn(true);
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
@@ -178,7 +178,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturn('from_none');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['__NONE__' => [$resolver]]));
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator(['__NONE__' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertSame('from_none', $chain->resolve($parameter, $this->createMetadata()));
@@ -194,7 +194,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $resolverB->method('supports')->willReturn(true);
         $resolverB->method('resolve')->willReturn('from_bar');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups([
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator([
             'foo' => [$resolverA],
             'bar' => [$resolverB],
         ]));
@@ -218,7 +218,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $fallback->method('supports')->willReturn(true);
         $fallback->method('resolve')->willReturn('resolved');
 
-        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups([
+        $chain = new ParameterValueResolverChain(new InMemoryCallableServiceLocator([
             'foo' => [$shared, $fallback],
             'bar' => [$shared],
         ]));

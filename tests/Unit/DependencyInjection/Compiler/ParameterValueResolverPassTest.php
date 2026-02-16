@@ -2,8 +2,8 @@
 
 namespace OpenSolid\CallableInvoker\Tests\Unit\DependencyInjection\Compiler;
 
+use OpenSolid\CallableInvoker\CallableServiceLocator;
 use OpenSolid\CallableInvoker\DependecyInjection\Compiler\ParameterValueResolverPass;
-use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverGroups;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
@@ -21,7 +21,7 @@ final class ParameterValueResolverPassTest extends AbstractGroupingPassTest
 
     protected function getChainClass(): string
     {
-        return ParameterValueResolverGroups::class;
+        return CallableServiceLocator::class;
     }
 
     protected function getTaggedClass(): string

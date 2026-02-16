@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
-namespace OpenSolid\CallableInvoker\ValueResolver;
+namespace OpenSolid\CallableInvoker;
 
 use Psr\Container\ContainerInterface;
 
-final readonly class ParameterValueResolverGroups implements ParameterValueResolverGroupsInterface
+/**
+ * @template T of object
+ *
+ * @implements CallableServiceLocatorInterface<T>
+ */
+final readonly class CallableServiceLocator implements CallableServiceLocatorInterface
 {
     public function __construct(
         private ContainerInterface $container,
@@ -16,7 +21,7 @@ final readonly class ParameterValueResolverGroups implements ParameterValueResol
     /**
      * @param list<string> $groups
      *
-     * @return iterable<ParameterValueResolverInterface>
+     * @return iterable<T>
      */
     public function get(array $groups): iterable
     {
@@ -26,13 +31,13 @@ final readonly class ParameterValueResolverGroups implements ParameterValueResol
                 continue;
             }
 
-            /** @var iterable<ParameterValueResolverInterface> $resolvers */
-            $resolvers = $this->container->get($group);
-            foreach ($resolvers as $resolver) {
-                $id = spl_object_id($resolver);
+            /** @var iterable<T> $services */
+            $services = $this->container->get($group);
+            foreach ($services as $service) {
+                $id = spl_object_id($service);
                 if (!isset($seen[$id])) {
                     $seen[$id] = true;
-                    yield $resolver;
+                    yield $service;
                 }
             }
         }

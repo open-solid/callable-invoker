@@ -3,17 +3,22 @@
 namespace OpenSolid\CallableInvoker\Decorator;
 
 use OpenSolid\CallableInvoker\CallableMetadata;
+use OpenSolid\CallableInvoker\CallableServiceLocatorInterface;
+use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 
 final readonly class FunctionDecoratorChain implements FunctionDecoratorInterface
 {
+    /**
+     * @param CallableServiceLocatorInterface<FunctionDecoratorInterface> $decorators
+     */
     public function __construct(
-        private FunctionDecoratorGroupsInterface $groups = new InMemoryFunctionDecoratorGroups(),
+        private CallableServiceLocatorInterface $decorators = new InMemoryCallableServiceLocator(),
     ) {
     }
 
     public function supports(CallableMetadata $metadata): bool
     {
-        foreach ($this->groups->get($metadata->groups) as $decorator) {
+        foreach ($this->decorators->get($metadata->groups) as $decorator) {
             if ($decorator->supports($metadata)) {
                 return true;
             }
@@ -24,7 +29,7 @@ final readonly class FunctionDecoratorChain implements FunctionDecoratorInterfac
 
     public function decorate(\Closure $function, CallableMetadata $metadata): \Closure
     {
-        foreach ($this->groups->get($metadata->groups) as $decorator) {
+        foreach ($this->decorators->get($metadata->groups) as $decorator) {
             if ($decorator->supports($metadata)) {
                 $function = $decorator->decorate($function, $metadata);
             }
