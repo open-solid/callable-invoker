@@ -5,6 +5,7 @@ use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\CallableServiceLocator;
+use OpenSolid\CallableInvoker\ValueResolver\ContextParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\UnsupportedParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\NullableParameterValueResolver;
@@ -26,10 +27,12 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('callable_invoker.value_resolver.unsupported', UnsupportedParameterValueResolver::class)
         ->tag('callable_invoker.value_resolver', ['priority' => 100]);
-    $services->set('callable_invoker.value_resolver.default_value', DefaultValueParameterValueResolver::class)
+    $services->set('callable_invoker.value_resolver.context', ContextParameterValueResolver::class)
         ->tag('callable_invoker.value_resolver', ['priority' => -100]);
-    $services->set('callable_invoker.value_resolver.nullable', NullableParameterValueResolver::class)
+    $services->set('callable_invoker.value_resolver.default_value', DefaultValueParameterValueResolver::class)
         ->tag('callable_invoker.value_resolver', ['priority' => -200]);
+    $services->set('callable_invoker.value_resolver.nullable', NullableParameterValueResolver::class)
+        ->tag('callable_invoker.value_resolver', ['priority' => -300]);
 
     $services->set('callable_invoker.decorator_groups', CallableServiceLocator::class)
         ->args([abstract_arg('groups of decorators')]);

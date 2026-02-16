@@ -19,13 +19,6 @@ $ composer require open-solid/callable-invoker
 
 ```php
 use OpenSolid\CallableInvoker\CallableInvoker;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
-use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
-
-$invoker = new CallableInvoker(
-    new FunctionDecoratorChain(),
-    new ParameterValueResolverChain(),
-);
 
 class HelloHandler
 {
@@ -36,7 +29,9 @@ class HelloHandler
 }
 
 $handler = new HelloHandler();
-$result = $invoker->invoke($handler, ['name' => 'Alice']);
+
+$invoker = new CallableInvoker();
+$result = $invoker->invoke(callable: $handler, context: ['name' => 'Alice']);
 
 echo $result; // Output: Hello, Alice! You are 30 years old.
 ```

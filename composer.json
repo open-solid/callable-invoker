@@ -6,7 +6,7 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=8.4",
-        "symfony/framework-bundle": "^6.4|^7.0"
+        "symfony/framework-bundle": "^7.0|^8.0"
     },
     "config": {
         "sort-packages": true

@@ -18,6 +18,7 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
         private CallableServiceLocatorInterface $resolvers = new InMemoryCallableServiceLocator([
             CallableInvokerInterface::DEFAULT_GROUP => [
                 new UnsupportedParameterValueResolver(),
+                new ContextParameterValueResolver(),
                 new DefaultValueParameterValueResolver(),
                 new NullableParameterValueResolver(),
             ],
