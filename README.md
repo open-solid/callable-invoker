@@ -40,13 +40,14 @@ $result = $invoker->invoke(callable: $handler, context: ['name' => 'Alice']);
 echo $result; // Output: Hello, Alice! You are 30 years old.
 ```
 
-## Features
+## Documentation
 
-- **Automatic Parameter Resolution**: Resolves callable parameters from a provided context array, default values, and nullability — no manual argument wiring needed.
-- **Execution Decoration**: Wraps callables with nested decorators for cross-cutting concerns like logging, validation, caching, or timing. Each decorator can intercept, modify, or short-circuit the execution.
-- **Grouping**: Organizes decorators and resolvers into named groups, allowing different callables to use different sets of decorators and resolvers. Multiple groups can be combined in a single invocation.
-- **Priority Ordering**: Controls the execution order of decorators and resolvers via priority values, ensuring predictable behavior when multiple are registered.
-- **Support for Any Callable**: Works with closures, invokable objects, static methods, named functions, and more.
-- **Extensible**: Register custom parameter value resolvers (`ParameterValueResolverInterface`) and decorators (`CallableDecoratorInterface`) to extend the invoker's behavior.
-- **Symfony Integration**: Ships as a Symfony bundle with autoconfiguration via interfaces and PHP attributes (`#[AsCallableDecorator]`, `#[AsParameterValueResolver]`), service tagging, and compiler passes.
-- **Clear Error Handling**: Provides specific exceptions for untyped parameters, variadic parameters, unsupported callables, and unresolvable parameters.
+- [Automatic Parameter Resolution](docs/parameter-resolution.md): Resolves callable parameters from a provided context array, default values, and nullability — no manual argument wiring needed.
+- [Execution Decoration](docs/decoration.md): Wraps callables with nested decorators for cross-cutting concerns like logging, validation, caching, or timing. Each decorator can intercept, modify, or short-circuit the execution.
+- [Grouping](docs/grouping.md): Organizes decorators and resolvers into named groups, allowing different callables to use different sets of decorators and resolvers. Multiple groups can be combined in a single invocation.
+- [Priority Ordering](docs/priority.md): Controls the execution order of decorators and resolvers via priority values, ensuring predictable behavior when multiple are registered.
+- [Support for Any Callable](docs/callables.md): Works with closures, invokable objects, static methods, named functions, and more.
+- [Extensibility](docs/extensibility.md): Register custom parameter value resolvers (`ParameterValueResolverInterface`) and decorators (`CallableDecoratorInterface`) to extend the invoker's behavior.
+- [Symfony Integration](docs/symfony-integration.md): Ships as a Symfony bundle with autoconfiguration via interfaces and PHP attributes (`#[AsCallableDecorator]`, `#[AsParameterValueResolver]`), service tagging, and compiler passes.
+- [Error Handling](docs/error-handling.md): Provides specific exceptions for untyped parameters, variadic parameters, unsupported callables, and unresolvable parameters.
+
