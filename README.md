@@ -10,12 +10,11 @@ $ composer require open-solid/callable-invoker
 
 ## Usage
 
-A callable invoker is a component whose job is to:
+The callable invoker accepts any PHP callable — closures, invokable objects, static methods, etc. — and handles the full execution lifecycle:
 
-1. Take any PHP callable (function, closure, __invoke() object, etc.)
-2. Figure out what arguments it needs and resolve those arguments automatically (from context, defaults, nullables, etc.)
-3. Optionally wrap/decorate the callable (for logging, validation, caching, timing, etc.)
-4. Execute it
+1. **Resolve** parameters automatically from a context array, default values, or nullability
+2. **Decorate** the callable with optional layers (logging, validation, caching, etc.)
+3. **Execute** with the resolved arguments and return the result
 
 ```php
 use OpenSolid\CallableInvoker\CallableInvoker;
