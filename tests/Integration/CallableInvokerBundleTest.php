@@ -170,9 +170,9 @@ final class LoggingDecorator implements CallableDecoratorInterface
         return true;
     }
 
-    public function decorate(\Closure $function, CallableMetadata $metadata, ?string $group = null): \Closure
+    public function decorate(\Closure $closure, CallableMetadata $metadata, ?string $group = null): \Closure
     {
-        return static fn (...$args) => '[decorated] '.$function(...$args);
+        return static fn (...$args) => '[decorated] '.$closure(...$args);
     }
 }
 

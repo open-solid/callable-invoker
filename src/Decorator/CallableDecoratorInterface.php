@@ -12,5 +12,5 @@ interface CallableDecoratorInterface
     /**
      * @throws FunctionNotSupportedException if the function cannot be decorated
      */
-    public function decorate(\Closure $function, CallableMetadata $metadata): \Closure;
+    public function decorate(\Closure $closure, CallableMetadata $metadata): \Closure;
 }

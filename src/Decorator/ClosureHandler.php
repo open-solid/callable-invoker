@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace OpenSolid\CallableInvoker\Decorator;
 
-final readonly class ClosureInvoker
+final readonly class ClosureHandler
 {
     /**
      * @param array<array-key, mixed> $arguments
      */
     public function __construct(
-        public \Closure $function,
+        public \Closure $closure,
         public array $arguments,
     ) {
     }
 
-    public function invoke(): mixed
+    public function handle(): mixed
     {
-        return ($this->function)(...$this->arguments);
+        return ($this->closure)(...$this->arguments);
     }
 }

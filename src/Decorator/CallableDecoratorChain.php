@@ -27,14 +27,14 @@ final readonly class CallableDecoratorChain implements CallableDecoratorInterfac
         return false;
     }
 
-    public function decorate(\Closure $function, CallableMetadata $metadata): \Closure
+    public function decorate(\Closure $closure, CallableMetadata $metadata): \Closure
     {
         foreach ($this->decorators->get($metadata->groups) as $decorator) {
             if ($decorator->supports($metadata)) {
-                $function = $decorator->decorate($function, $metadata);
+                $closure = $decorator->decorate($closure, $metadata);
             }
         }
 
-        return $function;
+        return $closure;
     }
 }
