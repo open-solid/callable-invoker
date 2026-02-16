@@ -2,6 +2,7 @@
 
 namespace OpenSolid\CallableInvoker\Tests\Unit\DependencyInjection\Compiler;
 
+use OpenSolid\CallableInvoker\DependecyInjection\Compiler\CallableServiceLocatorPass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
@@ -13,11 +14,11 @@ use Symfony\Component\DependencyInjection\Reference;
 
 abstract class AbstractGroupingPassTest extends TestCase
 {
-    abstract protected function createPass(): CompilerPassInterface;
-
     abstract protected function getChainServiceId(): string;
 
-    abstract protected function getChainClass(): string;
+    abstract protected function getLocatorServiceId(): string;
+
+    abstract protected function getLocatorClass(): string;
 
     abstract protected function getTaggedClass(): string;
 
@@ -30,7 +31,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_a');
         $this->registerTaggedService($container, 'service_b');
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -46,7 +47,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_a', [['groups' => ['foo', 'bar']]]);
         $this->registerTaggedService($container, 'service_b', [['groups' => ['bar']]]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -65,7 +66,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_a', [[], ['groups' => ['foo']]]);
         $this->registerTaggedService($container, 'service_b');
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -79,7 +80,7 @@ abstract class AbstractGroupingPassTest extends TestCase
     {
         $container = $this->createContainer();
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -96,7 +97,7 @@ abstract class AbstractGroupingPassTest extends TestCase
             ['groups' => ['bar']],
         ]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -115,7 +116,7 @@ abstract class AbstractGroupingPassTest extends TestCase
             [],
         ]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -132,7 +133,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_high', [['priority' => 100]]);
         $this->registerTaggedService($container, 'service_default');
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -146,7 +147,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_low', [['groups' => ['foo'], 'priority' => -10]]);
         $this->registerTaggedService($container, 'service_high', [['groups' => ['foo'], 'priority' => 10]]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -161,7 +162,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_default');
         $this->registerTaggedService($container, 'service_negative', [['priority' => -1]]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -176,7 +177,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'grouped_b', [['groups' => ['bar']]]);
         $this->registerTaggedService($container, 'ungrouped');
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -194,7 +195,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'ungrouped_mid', [['priority' => 5]]);
         $this->registerTaggedService($container, 'grouped_low', [['groups' => ['foo'], 'priority' => -10]]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -209,7 +210,7 @@ abstract class AbstractGroupingPassTest extends TestCase
         $this->registerTaggedService($container, 'service_multi', [['priority' => 5], ['priority' => 20]]);
         $this->registerTaggedService($container, 'service_single', [['priority' => 10]]);
 
-        $this->createPass()->process($container);
+        $this->getPass()->process($container);
 
         $values = $this->getLocatorValues($container);
 
@@ -219,7 +220,7 @@ abstract class AbstractGroupingPassTest extends TestCase
     private function createContainer(): ContainerBuilder
     {
         $container = new ContainerBuilder();
-        $container->setDefinition($this->getChainServiceId(), new Definition($this->getChainClass()));
+        $container->setDefinition($this->getLocatorServiceId(), new Definition($this->getLocatorClass()));
 
         return $container;
     }
@@ -241,7 +242,7 @@ abstract class AbstractGroupingPassTest extends TestCase
      */
     private function getLocatorValues(ContainerBuilder $container): array
     {
-        $argument = $container->getDefinition($this->getChainServiceId())->getArgument(0);
+        $argument = $container->getDefinition($this->getLocatorServiceId())->getArgument(0);
         self::assertInstanceOf(ServiceLocatorArgument::class, $argument);
 
         return $argument->getValues();
@@ -255,5 +256,14 @@ abstract class AbstractGroupingPassTest extends TestCase
         $actualIds = array_map(static fn (Reference $ref) => (string) $ref, $argument->getValues());
 
         self::assertSame($expectedIds, $actualIds);
+    }
+
+    private function getPass(): CompilerPassInterface
+    {
+        return new CallableServiceLocatorPass(
+            $this->getLocatorServiceId(),
+            $this->getTagName(),
+            [$this->getChainServiceId()],
+        );
     }
 }

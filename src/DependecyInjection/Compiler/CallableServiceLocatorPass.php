@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-abstract readonly class AbstractGroupingPass implements CompilerPassInterface
+final readonly class CallableServiceLocatorPass implements CompilerPassInterface
 {
     /**
      * @param list<string> $excludeServiceIds

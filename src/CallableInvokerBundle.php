@@ -3,8 +3,7 @@
 namespace OpenSolid\CallableInvoker;
 
 use OpenSolid\CallableInvoker\Decorator\Attribute\AsFunctionDecorator;
-use OpenSolid\CallableInvoker\DependecyInjection\Compiler\FunctionDecoratorPass;
-use OpenSolid\CallableInvoker\DependecyInjection\Compiler\ParameterValueResolverPass;
+use OpenSolid\CallableInvoker\DependecyInjection\Compiler\CallableServiceLocatorPass;
 use OpenSolid\CallableInvoker\ValueResolver\Attribute\AsParameterValueResolver;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -16,8 +15,17 @@ class CallableInvokerBundle extends AbstractBundle
 {
     public function build(ContainerBuilder $container): void
     {
-        $container->addCompilerPass(new FunctionDecoratorPass());
-        $container->addCompilerPass(new ParameterValueResolverPass());
+        $container->addCompilerPass(new CallableServiceLocatorPass(
+            serviceId: 'callable_invoker.decorator_groups',
+            tagName: 'callable_invoker.decorator',
+            excludeServiceIds: ['callable_invoker.decorator_chain'],
+        ));
+
+        $container->addCompilerPass(new CallableServiceLocatorPass(
+            serviceId: 'callable_invoker.value_resolver_groups',
+            tagName: 'callable_invoker.value_resolver',
+            excludeServiceIds: ['callable_invoker.value_resolver_chain'],
+        ));
     }
 
     public function configure(DefinitionConfigurator $definition): void
