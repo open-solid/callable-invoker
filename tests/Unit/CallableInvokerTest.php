@@ -142,11 +142,11 @@ final class CallableInvokerTest extends TestCase
         $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('supports')->willReturn(true);
         $decorator->method('decorate')->willReturnCallback(
-            static function (CallableClosure $invoker, CallableMetadata $metadata) use (&$capturedInvoker, &$capturedMetadata) {
-                $capturedInvoker = $invoker;
+            static function (CallableClosure $callable, CallableMetadata $metadata) use (&$capturedInvoker, &$capturedMetadata) {
+                $capturedInvoker = $callable;
                 $capturedMetadata = $metadata;
 
-                return $invoker->call();
+                return $callable->call();
             },
         );
 
@@ -173,10 +173,10 @@ final class CallableInvokerTest extends TestCase
         $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('supports')->willReturn(true);
         $decorator->method('decorate')->willReturnCallback(
-            static function (CallableClosure $invoker, CallableMetadata $metadata) use (&$capturedMetadata) {
+            static function (CallableClosure $callable, CallableMetadata $metadata) use (&$capturedMetadata) {
                 $capturedMetadata = $metadata;
 
-                return $invoker->call();
+                return $callable->call();
             },
         );
 

@@ -117,19 +117,38 @@ final class CallableDecoratorTest extends TestCase
     }
 
     #[Test]
+    public function decorateNestsDecoratorsInOrder(): void
+    {
+        $inner = $this->createStub(CallableDecoratorInterface::class);
+        $inner->method('supports')->willReturn(true);
+        $inner->method('decorate')->willReturnCallback(static fn (CallableClosure $callable) => '['.$callable->call().']');
+
+        $outer = $this->createStub(CallableDecoratorInterface::class);
+        $outer->method('supports')->willReturn(true);
+        $outer->method('decorate')->willReturnCallback(static fn (CallableClosure $callable) => '('.$callable->call().')');
+
+        $callableDecorator = new CallableDecorator(new InMemoryCallableServiceLocator(['__NONE__' => [$inner, $outer]]));
+
+        $result = $callableDecorator->decorate(static fn () => 'original', $this->createMetadata());
+
+        // inner wraps first, then outer wraps inner's result
+        self::assertSame('([original])', $result());
+    }
+
+    #[Test]
     public function decorateAggregatesDecoratorsFromMultipleGroups(): void
     {
         $shared = $this->createStub(CallableDecoratorInterface::class);
         $shared->method('supports')->willReturn(true);
-        $shared->method('decorate')->willReturnCallback(static fn (CallableClosure $invoker) => $invoker->call().'_shared');
+        $shared->method('decorate')->willReturnCallback(static fn (CallableClosure $callable) => $callable->call().'_shared');
 
         $decoratorA = $this->createStub(CallableDecoratorInterface::class);
         $decoratorA->method('supports')->willReturn(true);
-        $decoratorA->method('decorate')->willReturnCallback(static fn (CallableClosure $invoker) => $invoker->call().'_A');
+        $decoratorA->method('decorate')->willReturnCallback(static fn (CallableClosure $callable) => $callable->call().'_A');
 
         $decoratorB = $this->createStub(CallableDecoratorInterface::class);
         $decoratorB->method('supports')->willReturn(true);
-        $decoratorB->method('decorate')->willReturnCallback(static fn (CallableClosure $invoker) => $invoker->call().'_B');
+        $decoratorB->method('decorate')->willReturnCallback(static fn (CallableClosure $callable) => $callable->call().'_B');
 
         $callableDecorator = new CallableDecorator(new InMemoryCallableServiceLocator([
             'foo' => [$shared, $decoratorA],
