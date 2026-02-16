@@ -4,8 +4,8 @@ namespace OpenSolid\CallableInvoker\Tests\Integration;
 
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\CallableMetadata;
+use OpenSolid\CallableInvoker\Decorator\CallableClosure;
 use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
-use OpenSolid\CallableInvoker\Decorator\ClosureInvoker;
 use OpenSolid\CallableInvoker\Exception\UntypedParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
@@ -116,9 +116,9 @@ final class LoggingDecorator implements CallableDecoratorInterface
         return true;
     }
 
-    public function decorate(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
+    public function decorate(CallableClosure $callable, CallableMetadata $metadata): string
     {
-        return '[decorated] '.$invoker->invoke();
+        return '[decorated] '.$callable->call();
     }
 }
 

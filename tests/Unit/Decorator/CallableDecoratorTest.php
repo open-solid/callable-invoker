@@ -2,9 +2,9 @@
 
 namespace OpenSolid\CallableInvoker\Tests\Unit\Decorator;
 
+use OpenSolid\CallableInvoker\Decorator\CallableClosure;
 use OpenSolid\CallableInvoker\Decorator\CallableDecorator;
 use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
-use OpenSolid\CallableInvoker\Decorator\ClosureInvoker;
 use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 use OpenSolid\CallableInvoker\Tests\Unit\TestHelper;
 use PHPUnit\Framework\Attributes\Test;
@@ -121,15 +121,15 @@ final class CallableDecoratorTest extends TestCase
     {
         $shared = $this->createStub(CallableDecoratorInterface::class);
         $shared->method('supports')->willReturn(true);
-        $shared->method('decorate')->willReturnCallback(static fn (ClosureInvoker $invoker) => $invoker->invoke().'_shared');
+        $shared->method('decorate')->willReturnCallback(static fn (CallableClosure $invoker) => $invoker->call().'_shared');
 
         $decoratorA = $this->createStub(CallableDecoratorInterface::class);
         $decoratorA->method('supports')->willReturn(true);
-        $decoratorA->method('decorate')->willReturnCallback(static fn (ClosureInvoker $invoker) => $invoker->invoke().'_A');
+        $decoratorA->method('decorate')->willReturnCallback(static fn (CallableClosure $invoker) => $invoker->call().'_A');
 
         $decoratorB = $this->createStub(CallableDecoratorInterface::class);
         $decoratorB->method('supports')->willReturn(true);
-        $decoratorB->method('decorate')->willReturnCallback(static fn (ClosureInvoker $invoker) => $invoker->invoke().'_B');
+        $decoratorB->method('decorate')->willReturnCallback(static fn (CallableClosure $invoker) => $invoker->call().'_B');
 
         $callableDecorator = new CallableDecorator(new InMemoryCallableServiceLocator([
             'foo' => [$shared, $decoratorA],

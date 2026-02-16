@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenSolid\CallableInvoker\Decorator;
 
-final readonly class ClosureInvoker
+final readonly class CallableClosure
 {
     /**
      * @param array<array-key, mixed> $args
@@ -15,7 +15,7 @@ final readonly class ClosureInvoker
     ) {
     }
 
-    public function invoke(): mixed
+    public function call(): mixed
     {
         return ($this->closure)(...$this->args);
     }

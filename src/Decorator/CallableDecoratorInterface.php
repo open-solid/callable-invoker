@@ -12,5 +12,5 @@ interface CallableDecoratorInterface
     /**
      * @throws CallableNotSupportedException if the callable cannot be decorated
      */
-    public function decorate(ClosureInvoker $invoker, CallableMetadata $metadata): mixed;
+    public function decorate(CallableClosure $callable, CallableMetadata $metadata): mixed;
 }

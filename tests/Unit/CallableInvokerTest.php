@@ -5,9 +5,9 @@ namespace OpenSolid\CallableInvoker\Tests\Unit;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\CallableMetadata;
+use OpenSolid\CallableInvoker\Decorator\CallableClosure;
 use OpenSolid\CallableInvoker\Decorator\CallableDecorator;
 use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
-use OpenSolid\CallableInvoker\Decorator\ClosureInvoker;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolver;
@@ -142,11 +142,11 @@ final class CallableInvokerTest extends TestCase
         $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('supports')->willReturn(true);
         $decorator->method('decorate')->willReturnCallback(
-            static function (ClosureInvoker $invoker, CallableMetadata $metadata) use (&$capturedInvoker, &$capturedMetadata) {
+            static function (CallableClosure $invoker, CallableMetadata $metadata) use (&$capturedInvoker, &$capturedMetadata) {
                 $capturedInvoker = $invoker;
                 $capturedMetadata = $metadata;
 
-                return $invoker->invoke();
+                return $invoker->call();
             },
         );
 
@@ -173,10 +173,10 @@ final class CallableInvokerTest extends TestCase
         $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('supports')->willReturn(true);
         $decorator->method('decorate')->willReturnCallback(
-            static function (ClosureInvoker $invoker, CallableMetadata $metadata) use (&$capturedMetadata) {
+            static function (CallableClosure $invoker, CallableMetadata $metadata) use (&$capturedMetadata) {
                 $capturedMetadata = $metadata;
 
-                return $invoker->invoke();
+                return $invoker->call();
             },
         );
 

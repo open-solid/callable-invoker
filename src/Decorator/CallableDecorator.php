@@ -24,7 +24,7 @@ final readonly class CallableDecorator
     {
         foreach ($this->decorators->get($metadata->groups) as $decorator) {
             if ($decorator->supports($metadata)) {
-                $closure = static fn (mixed ...$args) => $decorator->decorate(new ClosureInvoker($closure, $args), $metadata);
+                $closure = static fn (mixed ...$args) => $decorator->decorate(new CallableClosure($closure, $args), $metadata);
             }
         }
 
