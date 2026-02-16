@@ -7,16 +7,16 @@ namespace OpenSolid\CallableInvoker\Decorator;
 final readonly class ClosureInvoker
 {
     /**
-     * @param array<array-key, mixed> $arguments
+     * @param array<array-key, mixed> $args
      */
     public function __construct(
         public \Closure $closure,
-        public array $arguments,
+        public array $args,
     ) {
     }
 
     public function invoke(): mixed
     {
-        return ($this->closure)(...$this->arguments);
+        return ($this->closure)(...$this->args);
     }
 }

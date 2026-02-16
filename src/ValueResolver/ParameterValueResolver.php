@@ -9,32 +9,24 @@ use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\SkipParameterException;
 use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 
-final readonly class ParameterValueResolverChain implements ParameterValueResolverInterface
+final readonly class ParameterValueResolver
 {
+    /** @var CallableServiceLocatorInterface<ParameterValueResolverInterface> */
+    private CallableServiceLocatorInterface $resolvers;
+
     /**
-     * @param CallableServiceLocatorInterface<ParameterValueResolverInterface> $resolvers
+     * @param CallableServiceLocatorInterface<ParameterValueResolverInterface>|null $resolvers
      */
-    public function __construct(
-        private CallableServiceLocatorInterface $resolvers = new InMemoryCallableServiceLocator([
+    public function __construct(?CallableServiceLocatorInterface $resolvers = null)
+    {
+        $this->resolvers = $resolvers ?? new InMemoryCallableServiceLocator([
             CallableInvokerInterface::DEFAULT_GROUP => [
                 new UnsupportedParameterValueResolver(),
                 new ContextParameterValueResolver(),
                 new DefaultValueParameterValueResolver(),
                 new NullableParameterValueResolver(),
             ],
-        ]),
-    ) {
-    }
-
-    public function supports(\ReflectionParameter $parameter, CallableMetadata $metadata): bool
-    {
-        foreach ($this->resolvers->get($metadata->groups) as $resolver) {
-            if ($resolver->supports($parameter, $metadata)) {
-                return true;
-            }
-        }
-
-        return false;
+        ]);
     }
 
     public function resolve(\ReflectionParameter $parameter, CallableMetadata $metadata): mixed

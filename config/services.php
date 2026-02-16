@@ -2,14 +2,14 @@
 
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
-use OpenSolid\CallableInvoker\Decorator\CallableDecoratorChain;
+use OpenSolid\CallableInvoker\Decorator\CallableDecorator;
 use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 use OpenSolid\CallableInvoker\CallableServiceLocator;
 use OpenSolid\CallableInvoker\ValueResolver\ContextParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\UnsupportedParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\NullableParameterValueResolver;
-use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
+use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -36,21 +36,19 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('callable_invoker.decorator_groups', CallableServiceLocator::class)
         ->args([abstract_arg('groups of decorators')]);
-    $services->set('callable_invoker.decorator_chain', CallableDecoratorChain::class)
+    $services->set('callable_invoker.decorator', CallableDecorator::class)
         ->args([service('callable_invoker.decorator_groups')]);
 
     $services->set('callable_invoker.value_resolver_groups', CallableServiceLocator::class)
         ->args([abstract_arg('groups of value resolvers')]);
-    $services->set('callable_invoker.value_resolver_chain', ParameterValueResolverChain::class)
+    $services->set('callable_invoker.value_resolver', ParameterValueResolver::class)
         ->args([service('callable_invoker.value_resolver_groups')]);
 
     $services->set('callable_invoker', CallableInvoker::class)
         ->args([
-            service('callable_invoker.decorator_chain'),
-            service('callable_invoker.value_resolver_chain'),
+            service('callable_invoker.decorator'),
+            service('callable_invoker.value_resolver'),
         ]);
 
     $services->alias(CallableInvokerInterface::class, 'callable_invoker');
-    $services->alias(CallableDecoratorInterface::class, 'callable_invoker.decorator_chain');
-    $services->alias(ParameterValueResolverInterface::class, 'callable_invoker.value_resolver_chain');
 };

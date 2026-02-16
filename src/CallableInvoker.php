@@ -2,16 +2,14 @@
 
 namespace OpenSolid\CallableInvoker;
 
-use OpenSolid\CallableInvoker\Decorator\CallableDecoratorChain;
-use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
-use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
-use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
+use OpenSolid\CallableInvoker\Decorator\CallableDecorator;
+use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolver;
 
 final readonly class CallableInvoker implements CallableInvokerInterface
 {
     public function __construct(
-        private CallableDecoratorInterface $decorator = new CallableDecoratorChain(),
-        private ParameterValueResolverInterface $valueResolver = new ParameterValueResolverChain(),
+        private CallableDecorator $decorator = new CallableDecorator(),
+        private ParameterValueResolver $valueResolver = new ParameterValueResolver(),
     ) {
     }
 
@@ -22,9 +20,9 @@ final readonly class CallableInvoker implements CallableInvokerInterface
      */
     public function invoke(callable $callable, array $context = [], array $groups = [self::DEFAULT_GROUP]): mixed
     {
-        $closure = $callable(...);
-        $function = new \ReflectionFunction($closure);
+        $function = new \ReflectionFunction($closure = $callable(...));
         $metadata = new CallableMetadata($function, $context, $groups);
+
         $parameters = [];
         foreach ($function->getParameters() as $parameter) {
             $parameters[] = $this->valueResolver->resolve($parameter, $metadata);

@@ -5,8 +5,12 @@ namespace OpenSolid\CallableInvoker\Tests\Unit;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\CallableMetadata;
+use OpenSolid\CallableInvoker\Decorator\CallableDecorator;
 use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
+use OpenSolid\CallableInvoker\Decorator\ClosureInvoker;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
+use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
+use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -16,10 +20,7 @@ final class CallableInvokerTest extends TestCase
     #[Test]
     public function invokeCallableWithNoParameters(): void
     {
-        $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $this->createStub(ParameterValueResolverInterface::class),
-        );
+        $invoker = new CallableInvoker();
 
         $result = $invoker->invoke(static fn () => 'hello');
 
@@ -30,11 +31,13 @@ final class CallableInvokerTest extends TestCase
     public function invokeCallableWithResolvedParameters(): void
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturn('World');
 
         $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $resolver,
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$resolver],
+            ])),
         );
 
         $result = $invoker->invoke(static fn (string $name) => "Hello, $name!");
@@ -46,13 +49,15 @@ final class CallableInvokerTest extends TestCase
     public function invokeCallableWithContext(): void
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturnCallback(
             static fn (\ReflectionParameter $param, CallableMetadata $metadata) => $metadata->context[$param->getName()],
         );
 
         $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $resolver,
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$resolver],
+            ])),
         );
 
         $result = $invoker->invoke(static fn (string $name) => "Hello, $name!", ['name' => 'PHP']);
@@ -64,11 +69,13 @@ final class CallableInvokerTest extends TestCase
     public function invokeAppliesDecorator(): void
     {
         $decorator = $this->createStub(CallableDecoratorInterface::class);
-        $decorator->method('decorate')->willReturn(static fn () => 'decorated');
+        $decorator->method('supports')->willReturn(true);
+        $decorator->method('decorate')->willReturn('decorated');
 
         $invoker = new CallableInvoker(
-            $decorator,
-            $this->createStub(ParameterValueResolverInterface::class),
+            decorator: new CallableDecorator(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$decorator],
+            ])),
         );
 
         $result = $invoker->invoke(static fn () => 'original');
@@ -79,10 +86,7 @@ final class CallableInvokerTest extends TestCase
     #[Test]
     public function invokeClassCallable(): void
     {
-        $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $this->createStub(ParameterValueResolverInterface::class),
-        );
+        $invoker = new CallableInvoker();
 
         $callable = new class {
             public function __invoke(): string
@@ -100,6 +104,7 @@ final class CallableInvokerTest extends TestCase
     public function invokeCallableWithMultipleParameters(): void
     {
         $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
         $resolver->method('resolve')->willReturnCallback(
             static fn (\ReflectionParameter $param) => match ($param->getName()) {
                 'greeting' => 'Hello',
@@ -108,8 +113,9 @@ final class CallableInvokerTest extends TestCase
         );
 
         $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $resolver,
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$resolver],
+            ])),
         );
 
         $result = $invoker->invoke(static fn (string $greeting, string $name) => "$greeting, $name!");
@@ -120,14 +126,8 @@ final class CallableInvokerTest extends TestCase
     #[Test]
     public function invokeThrowsWhenParameterCannotBeResolved(): void
     {
-        $resolver = $this->createStub(ParameterValueResolverInterface::class);
-        $resolver->method('resolve')->willReturnCallback(
-            static fn (\ReflectionParameter $param) => throw ParameterNotSupportedException::create($param),
-        );
-
         $invoker = new CallableInvoker(
-            $this->createPassthroughDecorator(),
-            $resolver,
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator()),
         );
 
         $this->expectException(ParameterNotSupportedException::class);
@@ -135,29 +135,31 @@ final class CallableInvokerTest extends TestCase
     }
 
     #[Test]
-    public function invokePassesOriginalClosureAndContextToDecorator(): void
+    public function invokePassesMetadataToDecorator(): void
     {
-        $capturedClosure = null;
+        $capturedInvoker = null;
         $capturedMetadata = null;
         $decorator = $this->createStub(CallableDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
         $decorator->method('decorate')->willReturnCallback(
-            static function (\Closure $fn, CallableMetadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
-                $capturedClosure = $fn;
+            static function (ClosureInvoker $invoker, CallableMetadata $metadata) use (&$capturedInvoker, &$capturedMetadata) {
+                $capturedInvoker = $invoker;
                 $capturedMetadata = $metadata;
 
-                return $fn;
+                return $invoker->invoke();
             },
         );
 
         $invoker = new CallableInvoker(
-            $decorator,
-            $this->createStub(ParameterValueResolverInterface::class),
+            decorator: new CallableDecorator(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$decorator],
+            ])),
         );
 
         $invoker->invoke(static fn () => 'original', ['key' => 'value']);
 
-        self::assertNotNull($capturedClosure);
-        self::assertSame('original', $capturedClosure());
+        self::assertNotNull($capturedInvoker);
+        self::assertSame('original', ($capturedInvoker->closure)());
         self::assertNotNull($capturedMetadata);
         self::assertSame(['key' => 'value'], $capturedMetadata->context);
         self::assertSame([CallableInvokerInterface::DEFAULT_GROUP], $capturedMetadata->groups);
@@ -168,38 +170,25 @@ final class CallableInvokerTest extends TestCase
     public function invokePassesGroupsToMetadata(): void
     {
         $capturedMetadata = null;
-        $decorator = $this->createCapturingDecorator($capturedMetadata);
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+        $decorator->method('decorate')->willReturnCallback(
+            static function (ClosureInvoker $invoker, CallableMetadata $metadata) use (&$capturedMetadata) {
+                $capturedMetadata = $metadata;
+
+                return $invoker->invoke();
+            },
+        );
 
         $invoker = new CallableInvoker(
-            $decorator,
-            $this->createStub(ParameterValueResolverInterface::class),
+            decorator: new CallableDecorator(new InMemoryCallableServiceLocator([
+                'group_a' => [$decorator],
+            ])),
         );
 
         $invoker->invoke(static fn () => null, [], ['group_a', 'group_b']);
 
         self::assertNotNull($capturedMetadata);
         self::assertSame(['group_a', 'group_b'], $capturedMetadata->groups);
-    }
-
-    private function createPassthroughDecorator(): CallableDecoratorInterface
-    {
-        $decorator = $this->createStub(CallableDecoratorInterface::class);
-        $decorator->method('decorate')->willReturnArgument(0);
-
-        return $decorator;
-    }
-
-    private function createCapturingDecorator(?CallableMetadata &$capturedMetadata): CallableDecoratorInterface
-    {
-        $decorator = $this->createStub(CallableDecoratorInterface::class);
-        $decorator->method('decorate')->willReturnCallback(
-            static function (\Closure $fn, CallableMetadata $metadata) use (&$capturedMetadata) {
-                $capturedMetadata = $metadata;
-
-                return $fn;
-            },
-        );
-
-        return $decorator;
     }
 }
