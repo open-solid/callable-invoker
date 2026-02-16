@@ -7,11 +7,6 @@ use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 
 final class FunctionDecoratorPassTest extends AbstractGroupingPassTest
 {
-    protected function getChainServiceId(): string
-    {
-        return 'callable_invoker.decorator_chain';
-    }
-
     protected function getLocatorServiceId(): string
     {
         return 'callable_invoker.decorator_groups';

@@ -14,8 +14,6 @@ use Symfony\Component\DependencyInjection\Reference;
 
 abstract class AbstractGroupingPassTest extends TestCase
 {
-    abstract protected function getChainServiceId(): string;
-
     abstract protected function getLocatorServiceId(): string;
 
     abstract protected function getLocatorClass(): string;
@@ -263,7 +261,6 @@ abstract class AbstractGroupingPassTest extends TestCase
         return new CallableServiceLocatorPass(
             $this->getLocatorServiceId(),
             $this->getTagName(),
-            [$this->getChainServiceId()],
         );
     }
 }

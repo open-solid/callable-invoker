@@ -13,13 +13,9 @@ use Symfony\Component\DependencyInjection\Reference;
 
 final readonly class CallableServiceLocatorPass implements CompilerPassInterface
 {
-    /**
-     * @param list<string> $excludeServiceIds
-     */
     public function __construct(
         private string $serviceId,
         private string $tagName,
-        private array $excludeServiceIds = [],
     ) {
     }
 
@@ -44,10 +40,6 @@ final readonly class CallableServiceLocatorPass implements CompilerPassInterface
         $ungrouped = [];
 
         foreach ($container->findTaggedServiceIds($this->tagName) as $id => $tags) {
-            if ($this->serviceId === $id || \in_array($id, $this->excludeServiceIds, true)) {
-                continue;
-            }
-
             $ref = new Reference($id);
             $hasExplicitGroup = false;
             /** @var int|null $maxPriority */

@@ -18,13 +18,11 @@ class CallableInvokerBundle extends AbstractBundle
         $container->addCompilerPass(new CallableServiceLocatorPass(
             serviceId: 'callable_invoker.decorator_groups',
             tagName: 'callable_invoker.decorator',
-            excludeServiceIds: ['callable_invoker.decorator'],
         ));
 
         $container->addCompilerPass(new CallableServiceLocatorPass(
             serviceId: 'callable_invoker.value_resolver_groups',
             tagName: 'callable_invoker.value_resolver',
-            excludeServiceIds: ['callable_invoker.value_resolver'],
         ));
     }
 
