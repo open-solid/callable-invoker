@@ -22,7 +22,7 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
+            protected function call(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
             {
                 return $invoker->invoke();
             }
@@ -42,7 +42,7 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
+            protected function call(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
             {
                 return $invoker->invoke();
             }
@@ -62,7 +62,7 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): string
+            protected function call(ClosureInvoker $invoker, CallableMetadata $metadata): string
             {
                 return '[wrapped] '.$invoker->invoke();
             }
@@ -82,7 +82,7 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): string
+            protected function call(ClosureInvoker $invoker, CallableMetadata $metadata): string
             {
                 return 'short-circuited';
             }
@@ -108,7 +108,7 @@ final class AbstractCallableDecoratorTest extends TestCase
                 return true;
             }
 
-            protected function invoke(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
+            protected function call(ClosureInvoker $invoker, CallableMetadata $metadata): mixed
             {
                 $this->captured = $invoker;
 
