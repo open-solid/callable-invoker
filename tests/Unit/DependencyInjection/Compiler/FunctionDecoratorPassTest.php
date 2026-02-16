@@ -3,7 +3,7 @@
 namespace OpenSolid\CallableInvoker\Tests\Unit\DependencyInjection\Compiler;
 
 use OpenSolid\CallableInvoker\CallableServiceLocator;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 
 final class FunctionDecoratorPassTest extends AbstractGroupingPassTest
 {
@@ -24,7 +24,7 @@ final class FunctionDecoratorPassTest extends AbstractGroupingPassTest
 
     protected function getTaggedClass(): string
     {
-        return FunctionDecoratorInterface::class;
+        return CallableDecoratorInterface::class;
     }
 
     protected function getTagName(): string

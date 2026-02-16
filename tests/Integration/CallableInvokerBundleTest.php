@@ -5,7 +5,7 @@ namespace OpenSolid\CallableInvoker\Tests\Integration;
 use OpenSolid\CallableInvoker\CallableInvokerBundle;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\CallableMetadata;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\UntypedParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\VariadicParameterNotSupportedException;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
@@ -34,7 +34,7 @@ final class CallableInvokerBundleTest extends TestCase
         $container = $this->createContainer();
 
         self::assertTrue($container->has(CallableInvokerInterface::class));
-        self::assertTrue($container->has(FunctionDecoratorInterface::class));
+        self::assertTrue($container->has(CallableDecoratorInterface::class));
         self::assertTrue($container->has(ParameterValueResolverInterface::class));
     }
 
@@ -163,7 +163,7 @@ final class CallableInvokerBundleTest extends TestCase
     }
 }
 
-final class LoggingDecorator implements FunctionDecoratorInterface
+final class LoggingDecorator implements CallableDecoratorInterface
 {
     public function supports(CallableMetadata $metadata, ?string $group = null): bool
     {

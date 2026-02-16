@@ -2,15 +2,15 @@
 
 namespace OpenSolid\CallableInvoker;
 
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorChain;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverChain;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 
 final readonly class CallableInvoker implements CallableInvokerInterface
 {
     public function __construct(
-        private FunctionDecoratorInterface $decorator = new FunctionDecoratorChain(),
+        private CallableDecoratorInterface $decorator = new CallableDecoratorChain(),
         private ParameterValueResolverInterface $valueResolver = new ParameterValueResolverChain(),
     ) {
     }

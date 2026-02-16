@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenSolid\CallableInvoker\Decorator\Attribute;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]
-final readonly class AsFunctionDecorator
+final readonly class AsCallableDecorator
 {
     /**
      * @var list<string>

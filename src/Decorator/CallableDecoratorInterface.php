@@ -5,7 +5,7 @@ namespace OpenSolid\CallableInvoker\Decorator;
 use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\Exception\FunctionNotSupportedException;
 
-interface FunctionDecoratorInterface
+interface CallableDecoratorInterface
 {
     public function supports(CallableMetadata $metadata): bool;
 

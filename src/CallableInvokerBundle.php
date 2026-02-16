@@ -2,7 +2,7 @@
 
 namespace OpenSolid\CallableInvoker;
 
-use OpenSolid\CallableInvoker\Decorator\Attribute\AsFunctionDecorator;
+use OpenSolid\CallableInvoker\Decorator\Attribute\AsCallableDecorator;
 use OpenSolid\CallableInvoker\DependecyInjection\Compiler\CallableServiceLocatorPass;
 use OpenSolid\CallableInvoker\ValueResolver\Attribute\AsParameterValueResolver;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -38,7 +38,7 @@ class CallableInvokerBundle extends AbstractBundle
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $builder->registerAttributeForAutoconfiguration(AsFunctionDecorator::class, static function (ChildDefinition $definition, AsFunctionDecorator $attribute) {
+        $builder->registerAttributeForAutoconfiguration(AsCallableDecorator::class, static function (ChildDefinition $definition, AsCallableDecorator $attribute) {
             $definition->addTag('callable_invoker.decorator', ['groups' => $attribute->groups, 'priority' => $attribute->priority]);
         });
 

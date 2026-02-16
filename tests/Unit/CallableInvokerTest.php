@@ -5,7 +5,7 @@ namespace OpenSolid\CallableInvoker\Tests\Unit;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\CallableMetadata;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\ValueResolver\ParameterValueResolverInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -63,7 +63,7 @@ final class CallableInvokerTest extends TestCase
     #[Test]
     public function invokeAppliesDecorator(): void
     {
-        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('decorate')->willReturn(static fn () => 'decorated');
 
         $invoker = new CallableInvoker(
@@ -177,7 +177,7 @@ final class CallableInvokerTest extends TestCase
     {
         $capturedClosure = null;
         $capturedMetadata = null;
-        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
             static function (\Closure $fn, CallableMetadata $metadata) use (&$capturedClosure, &$capturedMetadata) {
                 $capturedClosure = $fn;
@@ -219,17 +219,17 @@ final class CallableInvokerTest extends TestCase
         self::assertSame(['group_a', 'group_b'], $capturedMetadata->groups);
     }
 
-    private function createPassthroughDecorator(): FunctionDecoratorInterface
+    private function createPassthroughDecorator(): CallableDecoratorInterface
     {
-        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('decorate')->willReturnArgument(0);
 
         return $decorator;
     }
 
-    private function createCapturingDecorator(?CallableMetadata &$capturedMetadata): FunctionDecoratorInterface
+    private function createCapturingDecorator(?CallableMetadata &$capturedMetadata): CallableDecoratorInterface
     {
-        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
         $decorator->method('decorate')->willReturnCallback(
             static function (\Closure $fn, CallableMetadata $metadata) use (&$capturedMetadata) {
                 $capturedMetadata = $metadata;

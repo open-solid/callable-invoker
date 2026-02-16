@@ -2,8 +2,8 @@
 
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorChain;
-use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorChain;
+use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 use OpenSolid\CallableInvoker\CallableServiceLocator;
 use OpenSolid\CallableInvoker\ValueResolver\ContextParameterValueResolver;
 use OpenSolid\CallableInvoker\ValueResolver\DefaultValueParameterValueResolver;
@@ -19,7 +19,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
 
-    $services->instanceof(FunctionDecoratorInterface::class)
+    $services->instanceof(CallableDecoratorInterface::class)
         ->tag('callable_invoker.decorator');
 
     $services->instanceof(ParameterValueResolverInterface::class)
@@ -36,7 +36,7 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('callable_invoker.decorator_groups', CallableServiceLocator::class)
         ->args([abstract_arg('groups of decorators')]);
-    $services->set('callable_invoker.decorator_chain', FunctionDecoratorChain::class)
+    $services->set('callable_invoker.decorator_chain', CallableDecoratorChain::class)
         ->args([service('callable_invoker.decorator_groups')]);
 
     $services->set('callable_invoker.value_resolver_groups', CallableServiceLocator::class)
@@ -51,6 +51,6 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     $services->alias(CallableInvokerInterface::class, 'callable_invoker');
-    $services->alias(FunctionDecoratorInterface::class, 'callable_invoker.decorator_chain');
+    $services->alias(CallableDecoratorInterface::class, 'callable_invoker.decorator_chain');
     $services->alias(ParameterValueResolverInterface::class, 'callable_invoker.value_resolver_chain');
 };

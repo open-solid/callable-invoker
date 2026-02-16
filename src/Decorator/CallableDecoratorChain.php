@@ -6,10 +6,10 @@ use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\CallableServiceLocatorInterface;
 use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 
-final readonly class FunctionDecoratorChain implements FunctionDecoratorInterface
+final readonly class CallableDecoratorChain implements CallableDecoratorInterface
 {
     /**
-     * @param CallableServiceLocatorInterface<FunctionDecoratorInterface> $decorators
+     * @param CallableServiceLocatorInterface<CallableDecoratorInterface> $decorators
      */
     public function __construct(
         private CallableServiceLocatorInterface $decorators = new InMemoryCallableServiceLocator(),
