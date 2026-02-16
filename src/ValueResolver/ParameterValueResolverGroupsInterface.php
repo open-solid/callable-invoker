@@ -7,9 +7,9 @@ namespace OpenSolid\CallableInvoker\ValueResolver;
 interface ParameterValueResolverGroupsInterface
 {
     /**
+     * @param list<string> $groups
+     *
      * @return iterable<ParameterValueResolverInterface>
      */
-    public function get(string $group): iterable;
-
-    public function has(string $group): bool;
+    public function get(array $groups): iterable;
 }

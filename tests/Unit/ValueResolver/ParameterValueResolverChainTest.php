@@ -130,7 +130,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
-        self::assertTrue($chain->supports($parameter, $this->createMetadata(group: 'my_group')));
+        self::assertTrue($chain->supports($parameter, $this->createMetadata(groups: ['my_group'])));
     }
 
     #[Test]
@@ -142,7 +142,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
-        self::assertFalse($chain->supports($parameter, $this->createMetadata(group: 'other_group')));
+        self::assertFalse($chain->supports($parameter, $this->createMetadata(groups: ['other_group'])));
     }
 
     #[Test]
@@ -155,7 +155,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups(['my_group' => [$resolver]]));
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
-        self::assertSame('from_group', $chain->resolve($parameter, $this->createMetadata(group: 'my_group')));
+        self::assertSame('from_group', $chain->resolve($parameter, $this->createMetadata(groups: ['my_group'])));
     }
 
     #[Test]
@@ -168,7 +168,7 @@ final class ParameterValueResolverChainTest extends TestCase
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         $this->expectException(ParameterNotSupportedException::class);
-        $chain->resolve($parameter, $this->createMetadata(group: 'other_group'));
+        $chain->resolve($parameter, $this->createMetadata(groups: ['other_group']));
     }
 
     #[Test]
@@ -182,5 +182,51 @@ final class ParameterValueResolverChainTest extends TestCase
         $parameter = $this->getParameter(static fn (string $name) => null, 'name');
 
         self::assertSame('from_none', $chain->resolve($parameter, $this->createMetadata()));
+    }
+
+    #[Test]
+    public function resolveAggregatesResolversFromMultipleGroups(): void
+    {
+        $resolverA = $this->createStub(ParameterValueResolverInterface::class);
+        $resolverA->method('supports')->willReturn(false);
+
+        $resolverB = $this->createStub(ParameterValueResolverInterface::class);
+        $resolverB->method('supports')->willReturn(true);
+        $resolverB->method('resolve')->willReturn('from_bar');
+
+        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups([
+            'foo' => [$resolverA],
+            'bar' => [$resolverB],
+        ]));
+        $parameter = $this->getParameter(static fn (string $name) => null, 'name');
+
+        self::assertSame('from_bar', $chain->resolve($parameter, $this->createMetadata(groups: ['foo', 'bar'])));
+    }
+
+    #[Test]
+    public function resolveDeduplicatesResolversAcrossGroups(): void
+    {
+        $callCount = 0;
+        $shared = $this->createStub(ParameterValueResolverInterface::class);
+        $shared->method('supports')->willReturnCallback(static function () use (&$callCount) {
+            ++$callCount;
+
+            return false;
+        });
+
+        $fallback = $this->createStub(ParameterValueResolverInterface::class);
+        $fallback->method('supports')->willReturn(true);
+        $fallback->method('resolve')->willReturn('resolved');
+
+        $chain = new ParameterValueResolverChain(new InMemoryParameterValueResolverGroups([
+            'foo' => [$shared, $fallback],
+            'bar' => [$shared],
+        ]));
+        $parameter = $this->getParameter(static fn (string $name) => null, 'name');
+
+        $chain->resolve($parameter, $this->createMetadata(groups: ['foo', 'bar']));
+
+        // shared resolver should only be checked once despite being in both groups
+        self::assertSame(1, $callCount);
     }
 }

@@ -3,6 +3,7 @@
 namespace OpenSolid\CallableInvoker\Tests\Unit;
 
 use OpenSolid\CallableInvoker\CallableInvoker;
+use OpenSolid\CallableInvoker\CallableInvokerInterface;
 use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\Decorator\FunctionDecoratorInterface;
 use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
@@ -197,7 +198,25 @@ final class CallableInvokerTest extends TestCase
         self::assertSame('original', $capturedClosure());
         self::assertNotNull($capturedMetadata);
         self::assertSame(['key' => 'value'], $capturedMetadata->context);
+        self::assertSame([CallableInvokerInterface::DEFAULT_GROUP], $capturedMetadata->groups);
         self::assertInstanceOf(\ReflectionFunction::class, $capturedMetadata->function);
+    }
+
+    #[Test]
+    public function invokePassesGroupsToMetadata(): void
+    {
+        $capturedMetadata = null;
+        $decorator = $this->createCapturingDecorator($capturedMetadata);
+
+        $invoker = new CallableInvoker(
+            $decorator,
+            $this->createStub(ParameterValueResolverInterface::class),
+        );
+
+        $invoker->invoke(static fn () => null, [], ['group_a', 'group_b']);
+
+        self::assertNotNull($capturedMetadata);
+        self::assertSame(['group_a', 'group_b'], $capturedMetadata->groups);
     }
 
     private function createPassthroughDecorator(): FunctionDecoratorInterface

@@ -15,15 +15,21 @@ final readonly class InMemoryFunctionDecoratorGroups implements FunctionDecorato
     }
 
     /**
+     * @param list<string> $groups
+     *
      * @return iterable<FunctionDecoratorInterface>
      */
-    public function get(string $group): iterable
+    public function get(array $groups): iterable
     {
-        return $this->groups[$group] ?? [];
-    }
-
-    public function has(string $group): bool
-    {
-        return isset($this->groups[$group]);
+        $seen = [];
+        foreach ($groups as $group) {
+            foreach ($this->groups[$group] ?? [] as $decorator) {
+                $id = spl_object_id($decorator);
+                if (!isset($seen[$id])) {
+                    $seen[$id] = true;
+                    yield $decorator;
+                }
+            }
+        }
     }
 }

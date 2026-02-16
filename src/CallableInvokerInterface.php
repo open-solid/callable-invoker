@@ -8,6 +8,7 @@ interface CallableInvokerInterface
 
     /**
      * @param array<string, mixed> $context
+     * @param list<string>         $groups
      */
-    public function invoke(callable $callable, array $context = [], string $group = self::DEFAULT_GROUP): mixed;
+    public function invoke(callable $callable, array $context = [], array $groups = [self::DEFAULT_GROUP]): mixed;
 }

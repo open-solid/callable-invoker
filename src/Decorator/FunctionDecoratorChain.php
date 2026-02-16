@@ -13,7 +13,7 @@ final readonly class FunctionDecoratorChain implements FunctionDecoratorInterfac
 
     public function supports(CallableMetadata $metadata): bool
     {
-        foreach ($this->groups->get($metadata->group) as $decorator) {
+        foreach ($this->groups->get($metadata->groups) as $decorator) {
             if ($decorator->supports($metadata)) {
                 return true;
             }
@@ -24,7 +24,7 @@ final readonly class FunctionDecoratorChain implements FunctionDecoratorInterfac
 
     public function decorate(\Closure $function, CallableMetadata $metadata): \Closure
     {
-        foreach ($this->groups->get($metadata->group) as $decorator) {
+        foreach ($this->groups->get($metadata->groups) as $decorator) {
             if ($decorator->supports($metadata)) {
                 $function = $decorator->decorate($function, $metadata);
             }

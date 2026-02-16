@@ -15,7 +15,7 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
 
     public function supports(\ReflectionParameter $parameter, CallableMetadata $metadata): bool
     {
-        foreach ($this->groups->get($metadata->group) as $resolver) {
+        foreach ($this->groups->get($metadata->groups) as $resolver) {
             if ($resolver->supports($parameter, $metadata)) {
                 return true;
             }
@@ -26,7 +26,7 @@ final readonly class ParameterValueResolverChain implements ParameterValueResolv
 
     public function resolve(\ReflectionParameter $parameter, CallableMetadata $metadata): mixed
     {
-        foreach ($this->groups->get($metadata->group) as $resolver) {
+        foreach ($this->groups->get($metadata->groups) as $resolver) {
             if ($resolver->supports($parameter, $metadata)) {
                 try {
                     return $resolver->resolve($parameter, $metadata);

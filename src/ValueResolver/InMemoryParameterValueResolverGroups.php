@@ -23,15 +23,21 @@ final readonly class InMemoryParameterValueResolverGroups implements ParameterVa
     }
 
     /**
+     * @param list<string> $groups
+     *
      * @return iterable<ParameterValueResolverInterface>
      */
-    public function get(string $group): iterable
+    public function get(array $groups): iterable
     {
-        return $this->groups[$group] ?? [];
-    }
-
-    public function has(string $group): bool
-    {
-        return isset($this->groups[$group]);
+        $seen = [];
+        foreach ($groups as $group) {
+            foreach ($this->groups[$group] ?? [] as $resolver) {
+                $id = spl_object_id($resolver);
+                if (!isset($seen[$id])) {
+                    $seen[$id] = true;
+                    yield $resolver;
+                }
+            }
+        }
     }
 }

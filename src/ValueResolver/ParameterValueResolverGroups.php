@@ -14,20 +14,27 @@ final readonly class ParameterValueResolverGroups implements ParameterValueResol
     }
 
     /**
+     * @param list<string> $groups
+     *
      * @return iterable<ParameterValueResolverInterface>
      */
-    public function get(string $group): iterable
+    public function get(array $groups): iterable
     {
-        if (!$this->container->has($group)) {
-            return [];
+        $seen = [];
+        foreach ($groups as $group) {
+            if (!$this->container->has($group)) {
+                continue;
+            }
+
+            /** @var iterable<ParameterValueResolverInterface> $resolvers */
+            $resolvers = $this->container->get($group);
+            foreach ($resolvers as $resolver) {
+                $id = spl_object_id($resolver);
+                if (!isset($seen[$id])) {
+                    $seen[$id] = true;
+                    yield $resolver;
+                }
+            }
         }
-
-        /* @phpstan-ignore-next-line */
-        return $this->container->get($group);
-    }
-
-    public function has(string $group): bool
-    {
-        return $this->container->has($group);
     }
 }

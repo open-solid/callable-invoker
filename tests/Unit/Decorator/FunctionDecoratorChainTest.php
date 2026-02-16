@@ -114,7 +114,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain(new InMemoryFunctionDecoratorGroups(['my_group' => [$decorator]]));
 
-        self::assertTrue($chain->supports($this->createMetadata(group: 'my_group')));
+        self::assertTrue($chain->supports($this->createMetadata(groups: ['my_group'])));
     }
 
     #[Test]
@@ -125,7 +125,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain(new InMemoryFunctionDecoratorGroups(['my_group' => [$decorator]]));
 
-        self::assertFalse($chain->supports($this->createMetadata(group: 'other_group')));
+        self::assertFalse($chain->supports($this->createMetadata(groups: ['other_group'])));
     }
 
     #[Test]
@@ -137,7 +137,7 @@ final class FunctionDecoratorChainTest extends TestCase
 
         $chain = new FunctionDecoratorChain(new InMemoryFunctionDecoratorGroups(['my_group' => [$decorator]]));
 
-        $result = $chain->decorate(static fn () => 'original', $this->createMetadata(group: 'my_group'));
+        $result = $chain->decorate(static fn () => 'original', $this->createMetadata(groups: ['my_group']));
 
         self::assertSame('from_group', $result());
     }
@@ -151,7 +151,7 @@ final class FunctionDecoratorChainTest extends TestCase
         $chain = new FunctionDecoratorChain(new InMemoryFunctionDecoratorGroups(['my_group' => [$decorator]]));
         $fn = static fn () => 'original';
 
-        $result = $chain->decorate($fn, $this->createMetadata(group: 'other_group'));
+        $result = $chain->decorate($fn, $this->createMetadata(groups: ['other_group']));
 
         self::assertSame($fn, $result);
     }
@@ -168,5 +168,43 @@ final class FunctionDecoratorChainTest extends TestCase
         $result = $chain->decorate(static fn () => 'original', $this->createMetadata());
 
         self::assertSame('from_none', $result());
+    }
+
+    #[Test]
+    public function decorateAggregatesDecoratorsFromMultipleGroups(): void
+    {
+        $shared = $this->createStub(FunctionDecoratorInterface::class);
+        $shared->method('supports')->willReturn(true);
+        $shared->method('decorate')->willReturnCallback(static fn (\Closure $fn) => static fn () => $fn().'_shared');
+
+        $decoratorA = $this->createStub(FunctionDecoratorInterface::class);
+        $decoratorA->method('supports')->willReturn(true);
+        $decoratorA->method('decorate')->willReturnCallback(static fn (\Closure $fn) => static fn () => $fn().'_A');
+
+        $decoratorB = $this->createStub(FunctionDecoratorInterface::class);
+        $decoratorB->method('supports')->willReturn(true);
+        $decoratorB->method('decorate')->willReturnCallback(static fn (\Closure $fn) => static fn () => $fn().'_B');
+
+        $chain = new FunctionDecoratorChain(new InMemoryFunctionDecoratorGroups([
+            'foo' => [$shared, $decoratorA],
+            'bar' => [$shared, $decoratorB],
+        ]));
+
+        $result = $chain->decorate(static fn () => 'original', $this->createMetadata(groups: ['foo', 'bar']));
+
+        // shared appears only once (dedup), then A from foo, then B from bar
+        self::assertSame('original_shared_A_B', $result());
+    }
+
+    #[Test]
+    public function supportsAggregatesAcrossMultipleGroups(): void
+    {
+        $decorator = $this->createStub(FunctionDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+
+        $chain = new FunctionDecoratorChain(new InMemoryFunctionDecoratorGroups(['bar' => [$decorator]]));
+
+        // 'foo' has nothing, but 'bar' has a supporting decorator
+        self::assertTrue($chain->supports($this->createMetadata(groups: ['foo', 'bar'])));
     }
 }
