@@ -42,7 +42,7 @@ echo $result; // Output: Hello, Alice! You are 30 years old.
 
 ## Documentation
 
-- [Automatic Parameter Resolution](docs/parameter-resolution.md): Resolves callable parameters from a provided context array, default values, and nullability — no manual argument wiring needed.
+- [Automatic Parameter Resolution](docs/parameter-resolution.md): Resolves callable parameters from a provided context array, default values, and nullability.
 - [Execution Decoration](docs/decoration.md): Wraps callables with nested decorators for cross-cutting concerns like logging, validation, caching, or timing. Each decorator can intercept, modify, or short-circuit the execution.
 - [Grouping](docs/grouping.md): Organizes decorators and resolvers into named groups, allowing different callables to use different sets of decorators and resolvers. Multiple groups can be combined in a single invocation.
 - [Priority Ordering](docs/priority.md): Controls the execution order of decorators and resolvers via priority values, ensuring predictable behavior when multiple are registered.
