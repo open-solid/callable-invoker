@@ -2,6 +2,8 @@
 
 A lightweight PHP callable invoker with smart parameter resolution and execution decoration.
 
+<img width="1000" height="420" alt="Screenshot 2026-02-24 at 10 49 51" src="https://github.com/user-attachments/assets/c882ab90-cced-4800-a6b1-ac6d1454ab05" />
+
 ## Overview
 
 Frameworks often need to execute user-defined callables — controllers, message handlers, console commands, event listeners, or custom entry points — where the arguments are not known at compile time. Each of these requires the same boilerplate: inspect the callable's parameters, resolve their values from some runtime context, and optionally wrap the execution with cross-cutting behavior.
