@@ -97,6 +97,24 @@ final class CallableInvokerBundleTest extends TestCase
         self::assertSame('Hey!', $result);
     }
 
+    #[Test]
+    public function ungroupedResolversWorkWithDecoratorOnlyGroup(): void
+    {
+        $invoker = $this->createContainer(static function (ContainerBuilder $container) {
+            $container->register('test.decorator', ApiGroupDecorator::class)
+                ->addTag('callable_invoker.decorator', ['groups' => ['api']]);
+        })->get(CallableInvokerInterface::class);
+
+        // Built-in ungrouped resolvers must still work even though 'api'
+        // was never declared in any resolver tag
+        $result = $invoker->invoke(
+            static fn (string $name = 'World') => "Hello, $name!",
+            groups: ['api'],
+        );
+
+        self::assertSame('Hello, World!', $result);
+    }
+
     /**
      * @param \Closure(ContainerBuilder): void|null $configure
      */
@@ -106,6 +124,19 @@ final class CallableInvokerBundleTest extends TestCase
         $this->kernel->boot();
 
         return $this->kernel->getContainer()->get('test.service_container');
+    }
+}
+
+final class ApiGroupDecorator implements CallableDecoratorInterface
+{
+    public function supports(CallableMetadata $metadata): bool
+    {
+        return true;
+    }
+
+    public function decorate(CallableClosure $callable, CallableMetadata $metadata): mixed
+    {
+        return $callable->call();
     }
 }
 
