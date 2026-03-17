@@ -13,6 +13,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 final class CallableInvokerBundleTest extends TestCase
 {
@@ -115,12 +117,58 @@ final class CallableInvokerBundleTest extends TestCase
         self::assertSame('Hello, World!', $result);
     }
 
+    #[Test]
+    public function decorateControllerListenerIsRegisteredByDefault(): void
+    {
+        $this->kernel = new TestKernel();
+        $this->kernel->boot();
+
+        self::assertTrue($this->kernel->getContainer()->has('callable_invoker.decorate_controller_listener'));
+    }
+
+    #[Test]
+    public function decorateControllerListenerIsNotRegisteredWhenDisabled(): void
+    {
+        $this->kernel = new TestKernel(bundleConfig: ['decorate' => ['controllers' => false]]);
+        $this->kernel->boot();
+
+        self::assertFalse($this->kernel->getContainer()->has('callable_invoker.decorate_controller_listener'));
+    }
+
+    #[Test]
+    public function decorateControllerListenerDecoratesController(): void
+    {
+        $this->kernel = new TestKernel(static function (ContainerBuilder $container) {
+            $container->register('test.decorator', PrefixDecorator::class)
+                ->addTag('callable_invoker.decorator', ['groups' => ['kernel.controller']]);
+        });
+        $this->kernel->boot();
+
+        $response = $this->kernel->handle(Request::create('/test'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('[prefix] original', $response->getContent());
+    }
+
+    #[Test]
+    public function decorateControllerListenerWithNoDecoratorsKeepsController(): void
+    {
+        $this->kernel = new TestKernel();
+        $this->kernel->boot();
+
+        $response = $this->kernel->handle(Request::create('/test'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('original', $response->getContent());
+    }
+
     /**
      * @param \Closure(ContainerBuilder): void|null $configure
+     * @param array<string, mixed>                  $bundleConfig
      */
-    private function createContainer(?\Closure $configure = null): ContainerInterface
+    private function createContainer(?\Closure $configure = null, array $bundleConfig = []): ContainerInterface
     {
-        $this->kernel = new TestKernel($configure);
+        $this->kernel = new TestKernel($configure, $bundleConfig);
         $this->kernel->boot();
 
         return $this->kernel->getContainer()->get('test.service_container');
@@ -163,5 +211,20 @@ final class GreetingValueResolver implements ParameterValueResolverInterface
     public function resolve(\ReflectionParameter $parameter, CallableMetadata $metadata): string
     {
         return 'Hey!';
+    }
+}
+
+final class PrefixDecorator implements CallableDecoratorInterface
+{
+    public function supports(CallableMetadata $metadata): bool
+    {
+        return true;
+    }
+
+    public function decorate(CallableClosure $callable, CallableMetadata $metadata): Response
+    {
+        $response = $callable->call();
+
+        return new Response('[prefix] '.$response->getContent());
     }
 }
