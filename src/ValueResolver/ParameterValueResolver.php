@@ -9,6 +9,9 @@ use OpenSolid\CallableInvoker\Exception\ParameterNotSupportedException;
 use OpenSolid\CallableInvoker\Exception\SkipParameterException;
 use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 
+/**
+ * @internal
+ */
 final readonly class ParameterValueResolver
 {
     /** @var CallableServiceLocatorInterface<ParameterValueResolverInterface> */

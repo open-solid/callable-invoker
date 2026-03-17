@@ -191,4 +191,126 @@ final class CallableInvokerTest extends TestCase
         self::assertNotNull($capturedMetadata);
         self::assertSame(['group_a', 'group_b'], $capturedMetadata->groups);
     }
+
+    #[Test]
+    public function resolveCallableWithNoParameters(): void
+    {
+        $invoker = new CallableInvoker();
+
+        $result = $invoker->resolve(static fn () => 'hello');
+
+        self::assertSame([], $result);
+    }
+
+    #[Test]
+    public function resolveCallableWithResolvedParameters(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+        $resolver->method('resolve')->willReturnCallback(
+            static fn (\ReflectionParameter $param) => match ($param->getName()) {
+                'greeting' => 'Hello',
+                'name' => 'World',
+            },
+        );
+
+        $invoker = new CallableInvoker(
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$resolver],
+            ])),
+        );
+
+        $result = $invoker->resolve(static fn (string $greeting, string $name) => "$greeting, $name!");
+
+        self::assertSame(['Hello', 'World'], $result);
+    }
+
+    #[Test]
+    public function resolveCallableWithContext(): void
+    {
+        $resolver = $this->createStub(ParameterValueResolverInterface::class);
+        $resolver->method('supports')->willReturn(true);
+        $resolver->method('resolve')->willReturnCallback(
+            static fn (\ReflectionParameter $param, CallableMetadata $metadata) => $metadata->context[$param->getName()],
+        );
+
+        $invoker = new CallableInvoker(
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$resolver],
+            ])),
+        );
+
+        $result = $invoker->resolve(static fn (string $name) => $name, ['name' => 'PHP']);
+
+        self::assertSame(['PHP'], $result);
+    }
+
+    #[Test]
+    public function resolveThrowsWhenParameterCannotBeResolved(): void
+    {
+        $invoker = new CallableInvoker(
+            valueResolver: new ParameterValueResolver(new InMemoryCallableServiceLocator()),
+        );
+
+        $this->expectException(ParameterNotSupportedException::class);
+        $invoker->resolve(static fn (string $name) => $name);
+    }
+
+    #[Test]
+    public function decorateCallableWithNoDecorators(): void
+    {
+        $invoker = new CallableInvoker();
+
+        $result = $invoker->decorate(static fn () => 'hello');
+
+        self::assertInstanceOf(\Closure::class, $result);
+        self::assertSame('hello', $result());
+    }
+
+    #[Test]
+    public function decorateCallableAppliesDecorator(): void
+    {
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+        $decorator->method('decorate')->willReturn('decorated');
+
+        $invoker = new CallableInvoker(
+            decorator: new CallableDecorator(new InMemoryCallableServiceLocator([
+                CallableInvokerInterface::DEFAULT_GROUP => [$decorator],
+            ])),
+        );
+
+        $result = $invoker->decorate(static fn () => 'original');
+
+        self::assertInstanceOf(\Closure::class, $result);
+        self::assertSame('decorated', $result());
+    }
+
+    #[Test]
+    public function decoratePassesMetadataToDecorator(): void
+    {
+        $capturedMetadata = null;
+        $decorator = $this->createStub(CallableDecoratorInterface::class);
+        $decorator->method('supports')->willReturn(true);
+        $decorator->method('decorate')->willReturnCallback(
+            static function (CallableClosure $callable, CallableMetadata $metadata) use (&$capturedMetadata) {
+                $capturedMetadata = $metadata;
+
+                return $callable->call();
+            },
+        );
+
+        $invoker = new CallableInvoker(
+            decorator: new CallableDecorator(new InMemoryCallableServiceLocator([
+                'group_a' => [$decorator],
+            ])),
+        );
+
+        $decorated = $invoker->decorate(static fn () => null, ['key' => 'value'], ['group_a']);
+        $decorated();
+
+        self::assertNotNull($capturedMetadata);
+        self::assertSame(['key' => 'value'], $capturedMetadata->context);
+        self::assertSame(['group_a'], $capturedMetadata->groups);
+    }
 }

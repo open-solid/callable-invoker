@@ -1,7 +1,9 @@
 <?php
 
+use OpenSolid\CallableInvoker\CallableDecoratorProviderInterface;
 use OpenSolid\CallableInvoker\CallableInvoker;
 use OpenSolid\CallableInvoker\CallableInvokerInterface;
+use OpenSolid\CallableInvoker\CallableParameterValueResolverInterface;
 use OpenSolid\CallableInvoker\Decorator\CallableDecorator;
 use OpenSolid\CallableInvoker\Decorator\CallableDecoratorInterface;
 use OpenSolid\CallableInvoker\CallableServiceLocator;
@@ -51,4 +53,6 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     $services->alias(CallableInvokerInterface::class, 'callable_invoker');
+    $services->alias(CallableParameterValueResolverInterface::class, 'callable_invoker');
+    $services->alias(CallableDecoratorProviderInterface::class, 'callable_invoker');
 };
