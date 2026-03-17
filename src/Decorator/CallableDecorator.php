@@ -6,6 +6,9 @@ use OpenSolid\CallableInvoker\CallableMetadata;
 use OpenSolid\CallableInvoker\CallableServiceLocatorInterface;
 use OpenSolid\CallableInvoker\InMemoryCallableServiceLocator;
 
+/**
+ * @internal
+ */
 final readonly class CallableDecorator
 {
     /** @var CallableServiceLocatorInterface<CallableDecoratorInterface> */
