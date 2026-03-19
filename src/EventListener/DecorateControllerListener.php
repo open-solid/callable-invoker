@@ -16,7 +16,7 @@ final readonly class DecorateControllerListener
     {
         $event->setController($this->decorator->decorate(
             callable: $event->getController(),
-            context: ['event' => $event],
+            context: ['event' => $event, 'request' => $event->getRequest()],
             groups: ['kernel.controller'],
         ));
     }
