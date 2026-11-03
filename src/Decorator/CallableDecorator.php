@@ -20,7 +20,18 @@ final readonly class CallableDecorator
     public function __construct(
         ?CallableServiceLocatorInterface $decorators = null,
     ) {
-        $this->decorators = $decorators ?? new InMemoryCallableServiceLocator();
+        $this->decorators = $decorators ?? self::noDecorators();
+    }
+
+    /**
+     * @return CallableServiceLocatorInterface<CallableDecoratorInterface>
+     */
+    private static function noDecorators(): CallableServiceLocatorInterface
+    {
+        /** @var array<string, iterable<CallableDecoratorInterface>> $groups */
+        $groups = [];
+
+        return new InMemoryCallableServiceLocator($groups);
     }
 
     public function decorate(\Closure $closure, CallableMetadata $metadata): \Closure
