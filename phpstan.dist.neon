@@ -2,3 +2,9 @@ parameters:
     level: max
     paths:
         - src
+    ignoreErrors:
+        # Symfony < 8.1 expects attributes grouped by class name. PHPStan analyses against 8.1+.
+        -
+            identifier: argument.type
+            path: src/EventListener/DecorateControllerListener.php
+            count: 1

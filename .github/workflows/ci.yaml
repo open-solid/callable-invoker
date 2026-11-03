@@ -44,7 +44,7 @@ jobs:
         run: vendor/bin/phpunit --testsuite unit
 
   integration-tests:
-    name: Integration Tests (Symfony ${{ matrix.symfony }})
+    name: Tests (Symfony ${{ matrix.symfony }})
     needs: unit-tests
     runs-on: ubuntu-latest
     strategy:
@@ -63,8 +63,8 @@ jobs:
         env:
           SYMFONY_VERSION: ${{ matrix.symfony }}
         run: |
-          composer require --no-update "symfony/framework-bundle:${SYMFONY_VERSION}"
+          composer require --no-update "symfony/framework-bundle:${SYMFONY_VERSION}" "symfony/http-kernel:${SYMFONY_VERSION}"
           composer install --no-progress
 
       - name: PHPUnit
-        run: vendor/bin/phpunit --testsuite integration
+        run: vendor/bin/phpunit
