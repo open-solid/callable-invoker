@@ -9,6 +9,7 @@ return (new PhpCsFixer\Config())
         '@Symfony' => true,
         '@Symfony:risky' => true,
         'no_unused_imports' => true,
+        'declare_strict_types' => false,
     ])
     ->setRiskyAllowed(true)
     ->setFinder($finder)
